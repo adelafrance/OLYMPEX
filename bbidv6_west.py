@@ -46,14 +46,14 @@ small_rad_dim = 10.0 #radius to restrict to away from the radar (changing these 
 big_rad_dim = 60.0 #outer bounds of the radar scan, beyond 60 beam smoothing becomes an issue
 
 dBZ_exceed_val = 25.0 #threshold value that any vertical column for given x,y to be considered
-min_ave_dBZ = 10.0 #threshold for whether or not to use second mode layer
+min_ave_dBZ = 15.0 #threshold for whether or not to use second mode layer
 bb_crit_1 =15.0 #percentage of cells that need to have a value above the exceed level within rhohv range
 n_levels_allowed = 1 #number of levels allowed to select from above or below the mode (each level is 0.5km)
 
 time_cont = 0.5 #hours of temporal continuity needed for a bright band to be stratiform
 
 num_stds = 2.0 #standard deviations away from the mean for any time period of consecutive bbs
-ht_exc = 0.8 #additional requirement on top of standard deviation,distance away from mean required to be removed
+ht_exc = 0.75 #additional requirement on top of standard deviation,distance away from mean required to be removed
 
 #rhohv and ZDR bounds
 rhohv_min = 0.91

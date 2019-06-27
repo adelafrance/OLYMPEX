@@ -7,8 +7,6 @@
 #June 18
 #Works from bbidv5 but implements parallel procsessing
 
-#testing a git commit 
-
 from netCDF4 import Dataset, num2date, date2num
 from datetime import datetime
 import numpy as np
@@ -48,14 +46,14 @@ small_rad_dim = 10.0 #radius to restrict to away from the radar (changing these 
 big_rad_dim = 60.0 #outer bounds of the radar scan, beyond 60 beam smoothing becomes an issue
 
 dBZ_exceed_val = 25.0 #threshold value that any vertical column for given x,y to be considered
-min_ave_dBZ = 10.0 #threshold for whether or not to use second mode layer
-bb_crit_1 =30.0 #percentage of cells that need to have a value above the exceed level within rhohv range
+min_ave_dBZ = 15.0 #threshold for whether or not to use second mode layer
+bb_crit_1 =35.0 #percentage of cells that need to have a value above the exceed level within rhohv range
 n_levels_allowed = 1 #number of levels allowed to select from above or below the mode (each level is 0.5km)
 
 time_cont = 0.5 #hours of temporal continuity needed for a bright band to be stratiform
 
 num_stds = 2.0 #standard deviations away from the mean for any time period of consecutive bbs
-ht_exc = 0.5 #additional requirement on top of standard deviation,distance away from mean required to be removed
+ht_exc = 0.75 #additional requirement on top of standard deviation,distance away from mean required to be removed
 
 #rhohv and ZDR bounds
 rhohv_min = 0.91
@@ -71,17 +69,17 @@ rhi_dir = '/home/disk/bob/olympex/zebra/moments/npol_qc2/rhi/' #base directory f
 save_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/' #output directory for saved images
 data_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Data/' #directory for local data
 if use_rhohv:
-    save_name_fig = ''.join(['brightbandsfound_v6_r_4_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_r_4_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_r_4_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.csv'])
 elif use_ZDR:
-    save_name_fig = ''.join(['brightbandsfound_v6_r_4_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_r_4_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_r_4_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.csv'])
 else:
-    save_name_fig = ''.join(['brightbandsfound_v6_r_4_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_r_4_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_r_4_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.csv'])
 
 NARR_data = 'NARR_at_NPOL.csv'
 save_fn_fig = ''.join([save_dir,save_name_fig])
@@ -434,9 +432,9 @@ if require_time_cont:
                 for i_ht in range(i_begin,i_end):
                     if i_ht<ntimes:
                         ht_diff = height_mean - float(bright_bands[i_ht,2])
-                        if (float(bright_bands[i_ht,2]) > (height_mean+(num_stds * height_std))) and ht_diff > ht_exc:
+                        if ht_diff > ht_exc:
                             bright_bands[i_ht,1] = 4
-                        elif (float(bright_bands[i_ht,2]) < (height_mean-(num_stds * height_std))) and ht_diff > ht_exc:
+                        elif ht_diff > ht_exc:
                             bright_bands[i_ht,1] = 4
                 print(start_time,end_time,height_std,height_mean)
             i_begin = i_end + 1
