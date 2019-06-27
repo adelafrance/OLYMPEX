@@ -7,6 +7,8 @@
 #June 18
 #Works from bbidv5 but implements parallel procsessing
 
+#testing a git commit 
+
 from netCDF4 import Dataset, num2date, date2num
 from datetime import datetime
 import numpy as np
