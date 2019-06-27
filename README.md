@@ -1,2 +1,2 @@
-# OLYMPEX_GIT
+# OLYMPEX
 OLYMPEX related research material
