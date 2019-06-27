@@ -422,7 +422,7 @@ if require_time_cont:
                 bright_bands[i_begin:i_end,1] = 1
                 period_kept = True
             else:
-                bright_bands[i_begin:i_end,1] = 0
+                bright_bands[i_begin:i_end,1] = 3
                 period_kept = False
             #have a period of consecutive bbs, check height continuity
             if require_height_cont and period_kept:
@@ -459,7 +459,7 @@ if require_time_cont:
                     day_time_array[i_day,i_hour] = 1
                 elif all(x == 'nan' or x == '99' for x in bb_vals):
                     day_time_array[i_day,i_hour] = -1
-                elif any(y == '0' or y == '2' or y == '4' for y in bb_vals):
+                elif any(y == '0' or y == '2' or y == '3' or y == '4' for y in bb_vals):
                     day_time_array[i_day,i_hour] = 0
                 else:
                     day_time_array[i_day,i_hour] = -1
