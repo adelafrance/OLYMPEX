@@ -1,6 +1,6 @@
 #Andrew DeLaFrance
 #07 Mar 2019
-#Compare found Bright Bands to NARR melting levels
+#Compare found Bright Bands to NARR melting levels for the west
 #builds on findbbtimes.py
 
 import numpy as np
