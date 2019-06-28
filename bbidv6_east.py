@@ -38,24 +38,25 @@ dir = 'east' #look east or west (lowercase)
 use_rhohv = True
 use_ZDR = False
 use_both = False
-require_time_cont = False #require a bright band to be present for a continuous amount of time
-require_height_cont = False
+require_time_cont = True #require a bright band to be present for a continuous amount of time
+require_height_cont = True
 
 #spatial domain in radius from the radar
 small_rad_dim = 10.0 #radius to restrict to away from the radar (changing these requires recalculating n_total cells)
 big_rad_dim = 60.0 #outer bounds of the radar scan, beyond 60 beam smoothing becomes an issue
 
-dBZ_exceed_val = 30.0 #threshold value that any vertical column for given x,y to be considered
+dBZ_exceed_val = 25.0 #threshold value that any vertical column for given x,y to be considered
 min_ave_dBZ = 15.0 #threshold for whether or not to use second mode layer
-bb_crit_1 =30.0 #percentage of cells that need to have a value above the exceed level within rhohv range
+bb_crit_1 =35.0 #percentage of cells that need to have a value above the exceed level within rhohv range
 n_levels_allowed = 1 #number of levels allowed to select from above or below the mode (each level is 0.5km)
 
-time_cont = 0.25 #hours of temporal continuity needed for a bright band to be stratiform
+time_cont = 0 #hours of temporal continuity needed for a bright band to be stratiform
 
 num_stds = 2.0 #standard deviations away from the mean for any time period of consecutive bbs
 ht_exc = 0.75 #additional requirement on top of standard deviation,distance away from mean required to be removed
 ht_max = 4 #maximum height in kilometers that a bright band can exist in
 level_max = np.int(ht_max*2)
+check_dBZ = 20.0
 
 #rhohv and ZDR bounds
 rhohv_min = 0.91
@@ -352,7 +353,7 @@ def main_func(i):
     else:
         if prcnt_cells_met >= bb_crit_1: #does this meet bright band criteria with polarmetric criteria
             bb_data_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),1,bb_melting_height,closest_NARR_date,melt_layer,prcnt_above_dBZ, prcnt_cells_met,period_mode])
-        elif prcnt_above_dBZ >= bb_crit_1: #does this meet bright band criteria with dBZ only
+        elif prcnt_cells_met >= check_dBZ: #does this meet bright band criteria with dBZ only
             bb_data_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),2,bb_melting_height,closest_NARR_date,melt_layer,prcnt_above_dBZ, prcnt_cells_met,period_mode])
         else:#("layer does not meet either criteria")
             bb_data_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),0,bb_melting_height,closest_NARR_date,melt_layer,prcnt_above_dBZ, prcnt_cells_met,period_mode])
@@ -409,10 +410,10 @@ if require_time_cont:
     #assess temporal continuity > x hours for stratiform
     i_begin = 1 #start at 1 since row 0 is just placeholders for columns
     while (i_begin <= ntimes):
-        if bright_bands[i_begin,1] == '1':#is a bright band layer
+        if bright_bands[i_begin,1] == '1' or bright_bands[i_begin,1] == '2':#is a bright band layer
             #look for the end of contiuous bright bands found
             bb_remaining = bright_bands[i_begin:ntimes,1]
-            i_end = i_begin + next((i for i, v in enumerate(bb_remaining) if v != '1'), ntimes)
+            i_end = i_begin + next((i for i, v in enumerate(bb_remaining) if v not in ['1','2']), ntimes)
             start_time = datetime.datetime.strptime(bright_bands[i_begin,0], "%m/%d/%y %H:%M:%S")
             if i_end < ntimes:
                 end_time = datetime.datetime.strptime(bright_bands[i_end-1,0], "%m/%d/%y %H:%M:%S")
