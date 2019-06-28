@@ -24,10 +24,10 @@ dir = 'east' #look east or west (lowercase)
 
 output_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/' #location of previous output
 data_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Data/' #directory for local data
-bb_data = ''.join(['brightbandsfound_v6_r_6_time0.25x35.0pcntx25.0_withrhohv_0.910.97_',dir,'.npy'])
+bb_data = ''.join(['brightbandsfound_v6_r_6_time0.25x30.0pcntx30.0_withrhohv_0.910.97_',dir,'.npy'])
 NARR_data = 'NARR_at_NPOL.csv'
-save_name_data_csv = ''.join(['BrightBandsXNARR_v6_r_6_time0.25x35.0pcntx25.0_withrhohv_0.910.97_',dir,'.csv'])
-save_name_fig = ''.join(['BrightBandsXNARR_v6_r_6_time0.25x35.0pcntx25.0_withrhohv_0.910.97_',dir,'.png'])
+save_name_data_csv = ''.join(['BrightBandsXNARR_v6_r_6_time0.25x30.0pcntx30.0_withrhohv_0.910.97_',dir,'.csv'])
+save_name_fig = ''.join(['BrightBandsXNARR_v6_r_6_time0.25x30.0pcntx30.0_withrhohv_0.910.97_',dir,'.png'])
 bb_fn = ''.join([output_dir,bb_data])
 NARR_fn = ''.join([data_dir,NARR_data])
 save_fn_data_csv = ''.join([output_dir,save_name_data_csv])

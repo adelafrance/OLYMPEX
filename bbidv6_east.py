@@ -45,9 +45,9 @@ require_height_cont = False
 small_rad_dim = 10.0 #radius to restrict to away from the radar (changing these requires recalculating n_total cells)
 big_rad_dim = 60.0 #outer bounds of the radar scan, beyond 60 beam smoothing becomes an issue
 
-dBZ_exceed_val = 25.0 #threshold value that any vertical column for given x,y to be considered
+dBZ_exceed_val = 30.0 #threshold value that any vertical column for given x,y to be considered
 min_ave_dBZ = 15.0 #threshold for whether or not to use second mode layer
-bb_crit_1 =35.0 #percentage of cells that need to have a value above the exceed level within rhohv range
+bb_crit_1 =30.0 #percentage of cells that need to have a value above the exceed level within rhohv range
 n_levels_allowed = 1 #number of levels allowed to select from above or below the mode (each level is 0.5km)
 
 time_cont = 0.25 #hours of temporal continuity needed for a bright band to be stratiform
@@ -291,9 +291,9 @@ def main_func(i):
                 #restrict identification of max dBZ layer to be within bounds of rhohv and ZDR criteria
                 dBZ_met1 = np.where(dBZ[0,:,y_ind,x_ind] >= dBZ_exceed_val)[0]
                 if period_mode == 0:
-                    dBZ_met = [x for x in dBZ_met1 if x in range(period_mode,level_max)]
+                    dBZ_met = [x for x in dBZ_met1 if x in range(period_mode,(period_mode+(2*n_levels_allowed)+1))]
                 else:
-                    dBZ_met = [x for x in dBZ_met1 if x in range((period_mode-n_levels_allowed),level_max)]
+                    dBZ_met = [x for x in dBZ_met1 if x in range((period_mode-n_levels_allowed),(period_mode+(2*n_levels_allowed)+1)))]
                 matched_layer = [x for x in dBZ_met]
                 bb_layer = float('NaN') #initializing nothing found yet
 
