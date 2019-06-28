@@ -132,7 +132,7 @@ for date in date_list:
             filelist.append(file)
 
 numfiles = len(filelist)
-
+numfiles = 24
 #bring in NARR data
 df=pd.read_csv(NARR_fn, sep=',',header=None)
 NARR_data = np.array(df) #NARR Time,IVT,Melting Level (m),925speed (kt),925dir,Nd,Nm
@@ -421,7 +421,7 @@ if require_time_cont:
                 end_time = datetime.datetime.strptime(bright_bands[ntimes,0], "%m/%d/%y %H:%M:%S")
             tdelta = end_time - start_time #outputs difference in seconds
             tdelta_hours = tdelta.seconds/3600 #3600 seconds in an hour
-            if tdelta_hours > np.abs(time_cont):
+            if tdelta_hours >= np.abs(time_cont):
                 period_kept = True
                 if time_cont > 0:
                     bright_bands[i_begin:i_end,1] = 1
@@ -437,7 +437,9 @@ if require_time_cont:
                     #try local mean window for tossing out stray values
                     if i_ht<(ntimes-5) and i_ht >= 5:
                         local_set = [i for i, v in enumerate(bright_bands[i_ht-5:i_ht+5,2]) if v in ['1','2']]
+                        print(local_set)
                         local_mean = np.nanmean(local_set)
+                        print(local_mean)
                         ht_diff = local_mean - float(bright_bands[i_ht,2])
                         if ht_diff > ht_exc:
                             bright_bands[i_ht,1] = 4
