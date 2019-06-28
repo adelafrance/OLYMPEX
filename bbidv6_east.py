@@ -53,7 +53,7 @@ n_levels_allowed = 1 #number of levels allowed to select from above or below the
 time_cont = 0 #hours of temporal continuity needed for a bright band to be stratiform
 
 num_stds = 2.0 #standard deviations away from the mean for any time period of consecutive bbs
-ht_exc = 0.75 #additional requirement on top of standard deviation,distance away from mean required to be removed
+ht_exc = 0.5 #additional requirement on top of standard deviation,distance away from mean required to be removed
 ht_max = 4 #maximum height in kilometers that a bright band can exist in
 level_max = np.int(ht_max*2)
 check_dBZ = 20.0
@@ -440,8 +440,6 @@ if require_time_cont:
                         local_mean = np.nanmean(local_set)
                         ht_diff = local_mean - float(bright_bands[i_ht,2])
                         if ht_diff > ht_exc:
-                            bright_bands[i_ht,1] = 4
-                        elif ht_diff > ht_exc:
                             bright_bands[i_ht,1] = 4
                 print(start_time,end_time,height_std,height_mean)
             i_begin = i_end + 1
