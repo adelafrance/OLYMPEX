@@ -293,7 +293,7 @@ def main_func(i):
                 if period_mode == 0:
                     dBZ_met = [x for x in dBZ_met1 if x in range(period_mode,(period_mode+(2*n_levels_allowed)+1))]
                 else:
-                    dBZ_met = [x for x in dBZ_met1 if x in range((period_mode-n_levels_allowed),(period_mode+(2*n_levels_allowed)+1)))]
+                    dBZ_met = [x for x in dBZ_met1 if x in range((period_mode-n_levels_allowed),(period_mode+(2*n_levels_allowed)+1))]
                 matched_layer = [x for x in dBZ_met]
                 bb_layer = float('NaN') #initializing nothing found yet
 
