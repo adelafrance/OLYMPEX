@@ -54,6 +54,7 @@ time_cont = 0.5 #hours of temporal continuity needed for a bright band to be str
 
 num_stds = 2.0 #standard deviations away from the mean for any time period of consecutive bbs
 ht_exc = 0.75 #additional requirement on top of standard deviation,distance away from mean required to be removed
+ht_max = 4 #maximum height in kilometers that a bright band can exist in
 
 #rhohv and ZDR bounds
 rhohv_min = 0.91
@@ -264,7 +265,7 @@ def main_func(i):
         if ~np.isnan(dBZ[0,i,:,:]).all():
             dBZ_means[i] = np.nanmean(dBZ[0,i,:,:])
 
-    if period_mode_2 > period_mode and dBZ_means[period_mode_2] >= min_ave_dBZ:
+    if period_mode_2 > period_mode and dBZ_means[period_mode_2] >= min_ave_dBZ and (period_mode_2*0.5) < ht_max:
         period_mode = period_mode_2
 
     n_above_dBZ = 0 #for calculating percentages of cells meeting criteria
