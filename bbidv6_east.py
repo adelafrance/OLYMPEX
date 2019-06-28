@@ -422,8 +422,9 @@ if require_time_cont:
             tdelta = end_time - start_time #outputs difference in seconds
             tdelta_hours = tdelta.seconds/3600 #3600 seconds in an hour
             if tdelta_hours > np.abs(time_cont):
-                bright_bands[i_begin:i_end,1] = 1
                 period_kept = True
+                if time_cont > 0:
+                    bright_bands[i_begin:i_end,1] = 1
             else:
                 bright_bands[i_begin:i_end,1] = 3
                 period_kept = False
