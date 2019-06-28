@@ -38,8 +38,8 @@ dir = 'east' #look east or west (lowercase)
 use_rhohv = True
 use_ZDR = False
 use_both = False
-require_time_cont = True #require a bright band to be present for a continuous amount of time
-require_height_cont = True
+require_time_cont = False #require a bright band to be present for a continuous amount of time
+require_height_cont = False
 
 #spatial domain in radius from the radar
 small_rad_dim = 10.0 #radius to restrict to away from the radar (changing these requires recalculating n_total cells)
@@ -50,11 +50,12 @@ min_ave_dBZ = 15.0 #threshold for whether or not to use second mode layer
 bb_crit_1 =35.0 #percentage of cells that need to have a value above the exceed level within rhohv range
 n_levels_allowed = 1 #number of levels allowed to select from above or below the mode (each level is 0.5km)
 
-time_cont = 0.5 #hours of temporal continuity needed for a bright band to be stratiform
+time_cont = 0.25 #hours of temporal continuity needed for a bright band to be stratiform
 
 num_stds = 2.0 #standard deviations away from the mean for any time period of consecutive bbs
 ht_exc = 0.75 #additional requirement on top of standard deviation,distance away from mean required to be removed
 ht_max = 4 #maximum height in kilometers that a bright band can exist in
+level_max = np.int(ht_max*2)
 
 #rhohv and ZDR bounds
 rhohv_min = 0.91
@@ -290,9 +291,9 @@ def main_func(i):
                 #restrict identification of max dBZ layer to be within bounds of rhohv and ZDR criteria
                 dBZ_met1 = np.where(dBZ[0,:,y_ind,x_ind] >= dBZ_exceed_val)[0]
                 if period_mode == 0:
-                    dBZ_met = [x for x in dBZ_met1 if x in range(period_mode,(period_mode+(2*n_levels_allowed)))]
+                    dBZ_met = [x for x in dBZ_met1 if x in range(period_mode,level_max)]
                 else:
-                    dBZ_met = [x for x in dBZ_met1 if x in range((period_mode-n_levels_allowed),(period_mode+(2*n_levels_allowed)))]
+                    dBZ_met = [x for x in dBZ_met1 if x in range((period_mode-n_levels_allowed),level_max)]
                 matched_layer = [x for x in dBZ_met]
                 bb_layer = float('NaN') #initializing nothing found yet
 
