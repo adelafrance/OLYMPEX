@@ -436,7 +436,7 @@ if require_time_cont:
                 for i_ht in range(i_begin,i_end):
                     #try local mean window for tossing out stray values
                     if i_ht<(ntimes-5) and i_ht >= 5:
-                        local_set = [v for v in bright_bands[i_ht-5:i_ht+5,2] if bright_bands[v,1] in ['1','2']]
+                        local_set = [i for i, v in enumerate(bright_bands[i_ht-5:i_ht+5,2]) if v in ['1','2']]
                         local_mean = np.nanmean(local_set)
                         ht_diff = local_mean - float(bright_bands[i_ht,2])
                         if ht_diff > ht_exc:
