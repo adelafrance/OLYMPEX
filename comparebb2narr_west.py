@@ -111,7 +111,7 @@ days = dates.DayLocator(interval = 2)
 d_fmt = dates.DateFormatter('%m/%d/%y')
 ax.scatter(xdatesNARR,BrightBands_w_NARR[:,3], label = 'NARR Melt Level', color = 'gray',marker = 'o', s = 10)
 ax.scatter(xdatesNPOL,BrightBands_w_NARR[:,5], label = 'NPOL Sounding Level',color = "#1b9e77",marker = '^', s = 10)
-ax.plot(xdatesBB,BrightBands_w_NARR[:,1], label = 'NPOL Radar Level', color = 'blue',linestyle = ':', linewidth = 2.0)
+ax.plot(xdatesBB,BrightBands_w_NARR[:,1], label = 'NPOL Radar Level', color = 'blue',linestyle = '-', linewidth = 1.5)
 
 #ax.xticks(xdatesNPOL,BrightBands_w_NARR[:,0])
 ax.xaxis.set_major_locator(days)
