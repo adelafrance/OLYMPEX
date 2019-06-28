@@ -71,17 +71,17 @@ rhi_dir = '/home/disk/bob/olympex/zebra/moments/npol_qc2/rhi/' #base directory f
 save_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/' #output directory for saved images
 data_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Data/' #directory for local data
 if use_rhohv:
-    save_name_fig = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.csv'])
 elif use_ZDR:
-    save_name_fig = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.csv'])
 else:
-    save_name_fig = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_r_5_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.csv'])
 
 NARR_data = 'NARR_at_NPOL.csv'
 save_fn_fig = ''.join([save_dir,save_name_fig])
