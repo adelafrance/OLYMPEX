@@ -24,22 +24,21 @@ dir = 'west' #look east or west (lowercase)
 
 output_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/' #location of previous output
 data_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Data/' #directory for local data
-bb_data = ''.join(['brightbandsfound_v6_r_6_time0x35.0pcntx25.0_withrhohv_0.910.97_',dir,'.npy'])
-sounding_data = 'NPOL_soundings_melt_levs.npy'
+bb_data = ''.join(['brightbandsfound_v6_r_5_time0.5x15.0pcntx25.0_withrhohv_0.910.97_',dir,'.npy'])
+sounding_data = 'NPOL_sounding_melt_levs.npy'
 NARR_data = 'NARR_at_NPOL.csv'
 save_name_data_csv = ''.join(['BrightBandsXNARRXNPOL_v6_r_6_time0x35.0pcntx25.0_withrhohv_0.910.97_',dir,'.csv'])
 save_name_fig = ''.join(['BrightBandsXNARRXNPOL_v6_r_6_time0x35.0pcntx25.0_withrhohv_0.910.97_',dir,'.png'])
 bb_fn = ''.join([output_dir,bb_data])
-sounding_fn = ''.join([output_dir,souding_data])
+sounding_fn = ''.join([output_dir,sounding_data])
 NARR_fn = ''.join([data_dir,NARR_data])
 save_fn_data_csv = ''.join([output_dir,save_name_data_csv])
 save_fn_fig = ''.join([output_dir,save_name_fig])
 
 bright_bands = np.load(bb_fn)#time,bbfound, top, btm, bbcrit1, bbcrit2
-NPOL_data = np.load(souding_fn)
+NPOL_data = np.load(sounding_fn)
 df=pd.read_csv(NARR_fn, sep=',',header=None)
 NARR_data = np.array(df) #NARR Time,IVT,Melting Level (m),925speed (kt),925dir,Nd,Nm
-
 n_bbs = bright_bands.shape[0]
 n_NARRs = NARR_data.shape[0]
 n_NPOLs = NPOL_data.shape[0]
@@ -60,6 +59,9 @@ items = []
 for h in range(0,n_NARRs-1):
     items.append(datetime.datetime.strptime(NARR_data[h+1,0], "%Y-%m-%d %H:%M:%S"))
 
+items_NPOL = []
+for h in range(0,n_NPOLs-1):
+    items_NPOL.append(datetime.datetime.strptime(NPOL_data[h+1,0], "%m/%d/%y %H:%M:%S:"))
 #datetime_object_bb = datetime.strptime(bright_bands[1,0], "%m/%d - %H:%M:%S")
 
 #loop through all bb times to find nearest NARR melting level
@@ -79,13 +81,13 @@ for i in range(1,n_bbs):
     BrightBands_w_NARR[i,3] = float(NARR_data[min_index,2].replace(',',''))/1000 #assign the NARR melting layer to my array
 
     timedeltas = []
-    for j in range(0,n_NPOLs):
-        timedeltas.append(np.abs(pivot-NPOL_data[j,0]))
+    for j in range(0,len(items_NPOL)):
+        timedeltas.append(np.abs(pivot-items_NPOL[j]))
     min_index = timedeltas.index(np.min(timedeltas)) +1
-    d = datetime.datetime.strptime(NPOL_data[min_index,0], '%m/%d/%y %H:%M:%S')
-    melt_layer = NPOL_data[min_index,1]
-    BrightBands_w_NARR[i,4] = d
-    BrightBands_w_NARR[i,5] = float(NPOL_data[min_index,2])/1000 #assign the NPOL melting layer to my array
+    d2 = datetime.datetime.strptime(NPOL_data[min_index,0], '%m/%d/%y %H:%M:%S:').strftime('%m/%d/%y %H:%M:%S')
+    melt_layer2 = NPOL_data[min_index,1]
+    BrightBands_w_NARR[i,4] = d2
+    BrightBands_w_NARR[i,5] = float(NPOL_data[min_index,1])/1000 #assign the NPOL melting layer to my array
 
 BrightBands_w_NARR = BrightBands_w_NARR[1:BrightBands_w_NARR.shape[0],:] #just remove first row of index values
 BrightBands_w_NARR = BrightBands_w_NARR[BrightBands_w_NARR[:,0].argsort()]
@@ -107,9 +109,10 @@ for xi in range(0,BrightBands_w_NARR.shape[0]):
 fig, ax = plt.subplots()
 days = dates.DayLocator(interval = 2)
 d_fmt = dates.DateFormatter('%m/%d/%y')
-ax.plot(xdatesNARR,BrightBands_w_NARR[:,3], label = 'NARR Melt Level', color = 'gray')
-ax.plot(xdatesBB,BrightBands_w_NARR[:,1], label = 'NPOL Radar Level', color = "#1b9e77", linestyle = ':', linewidth = 1.5)
-ax.plot(xdatesNPOL,BrightBands_w_NARR[:,5], label = 'NPOL Sounding Level', color = "blue", linestyle = ':', linewidth = 1.5)
+ax.plot(xdatesNARR,BrightBands_w_NARR[:,3], label = 'NARR Melt Level', color = 'gray',linewidth = 2.0)
+ax.plot(xdatesNPOL,BrightBands_w_NARR[:,5], label = 'NPOL Sounding Level',color = "#1b9e77", linestyle = '-', linewidth = 1.5)
+ax.plot(xdatesBB,BrightBands_w_NARR[:,1], label = 'NPOL Radar Level', color = 'blue',linestyle = ':', linewidth = 1.5)
+
 #ax.xticks(xdatesNPOL,BrightBands_w_NARR[:,0])
 ax.xaxis.set_major_locator(days)
 ax.xaxis.set_major_formatter(d_fmt)
