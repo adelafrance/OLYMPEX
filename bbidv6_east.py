@@ -132,7 +132,7 @@ for date in date_list:
             filelist.append(file)
 
 numfiles = len(filelist)
-numfiles = 24
+
 #bring in NARR data
 df=pd.read_csv(NARR_fn, sep=',',header=None)
 NARR_data = np.array(df) #NARR Time,IVT,Melting Level (m),925speed (kt),925dir,Nd,Nm
@@ -405,7 +405,7 @@ for i_day in range(0,days_in_series):
 '''
 If temporal continuity is required
 '''
-
+print(bright_bands[0,:])
 if require_time_cont:
     #assess temporal continuity > x hours for stratiform
     i_begin = 1 #start at 1 since row 0 is just placeholders for columns
@@ -436,10 +436,10 @@ if require_time_cont:
                 for i_ht in range(i_begin,i_end):
                     #try local mean window for tossing out stray values
                     if i_ht<(ntimes-5) and i_ht > 5:
-                        local_set = [float(v) for u,v in enumerate(bright_bands[i_ht-5:i_ht+5,2]) if bright_bands[(u+i_ht-4),1] in ['1','2']]
-                        print(local_set)
+                        subset = bright_bands[(i_ht-5):(i_ht+5),2]
+                        local_set = [float(v) for u,v in enumerate(subset) if bright_bands[int(u),1] in ['1','2']]
+                        test_u = [float(u) for u,v in enumerate(subset) if bright_bands[int(u),1] in ['1','2']]
                         local_mean = np.nanmean(local_set)
-                        print(local_mean)
                         ht_diff = local_mean - float(bright_bands[i_ht,2])
                         if ht_diff > ht_exc:
                             bright_bands[i_ht,1] = 4
