@@ -435,8 +435,8 @@ if require_time_cont:
                 height_mean = np.nanmean(vals)
                 for i_ht in range(i_begin,i_end):
                     #try local mean window for tossing out stray values
-                    if i_ht<(ntimes-5) and i_ht >= 5:
-                        local_set = [v for u,v in enumerate(bright_bands[i_ht-5:i_ht+5,2]) if bright_bands[(u+i_ht-4),1] in ['1','2']]
+                    if i_ht<(ntimes-5) and i_ht > 5:
+                        local_set = [int(v) for u,v in enumerate(bright_bands[i_ht-5:i_ht+5,2]) if bright_bands[(u+i_ht-4),1] in ['1','2']]
                         print(local_set)
                         local_mean = np.nanmean(local_set)
                         print(local_mean)
