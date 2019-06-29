@@ -48,7 +48,7 @@ big_rad_dim = 60.0 #outer bounds of the radar scan, beyond 60 beam smoothing bec
 dBZ_exceed_val = 25.0 #threshold value that any vertical column for given x,y to be considered
 min_ave_dBZ = 15.0 #threshold for whether or not to use second mode layer
 bb_crit_1 =35.0 #percentage of cells that need to have a value above the exceed level within rhohv range
-n_levels_allowed = 1 #number of levels allowed to select from above or below the mode (each level is 0.5km)
+n_levels_allowed = 2 #number of levels allowed to select from above or below the mode (each level is 0.5km)
 
 time_cont = 0 #hours of temporal continuity needed for a bright band to be stratiform
 
@@ -72,17 +72,17 @@ rhi_dir = '/home/disk/bob/olympex/zebra/moments/npol_qc2/rhi/' #base directory f
 save_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/' #output directory for saved images
 data_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Data/' #directory for local data
 if use_rhohv:
-    save_name_fig = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.csv'])
 elif use_ZDR:
-    save_name_fig = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.csv'])
 else:
-    save_name_fig = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.csv'])
 
 NARR_data = 'NARR_at_NPOL.csv'
 save_fn_fig = ''.join([save_dir,save_name_fig])
@@ -292,9 +292,11 @@ def main_func(i):
                 #restrict identification of max dBZ layer to be within bounds of rhohv and ZDR criteria
                 dBZ_met1 = np.where(dBZ[0,:,y_ind,x_ind] >= dBZ_exceed_val)[0]
                 if period_mode == 0:
-                    dBZ_met = [x for x in dBZ_met1 if x in range(period_mode,(period_mode+(2*n_levels_allowed)+1))]
+                    dBZ_met = [x for x in dBZ_met1 if x in range(period_mode,(period_mode+(n_levels_allowed)+1))]
+                elif period_mode == 1:
+                    dBZ_met = [x for x in dBZ_met1 if x in range(period_mode-1,(period_mode+(n_levels_allowed)+1))]
                 else:
-                    dBZ_met = [x for x in dBZ_met1 if x in range((period_mode-n_levels_allowed),(period_mode+(2*n_levels_allowed)+1))]
+                    dBZ_met = [x for x in dBZ_met1 if x in range((period_mode-n_levels_allowed),(period_mode+(n_levels_allowed)+1))]
                 matched_layer = [x for x in dBZ_met]
                 bb_layer = float('NaN') #initializing nothing found yet
 
@@ -435,9 +437,14 @@ if require_time_cont:
                 height_mean = np.nanmean(vals)
                 for i_ht in range(i_begin,i_end):
                     #try local mean window for tossing out stray values
-                    if i_ht<(ntimes-5) and i_ht > 5:
+                    if i_ht<(ntimes-7) and i_ht > 5:
                         subset = bright_bands[(i_ht-5):(i_ht+5),2]
-                        local_set = [float(v) for u,v in enumerate(subset) if bright_bands[int(u),1] in ['1','2']]
+                        local_set = [float(v) for u,v in enumerate(subset)]
+                        n = 0
+                        for i_u in range((i_ht-5),(i_ht+5)):
+                            if bright_bands[i_u,1] not in ['1','2']:
+                                local_set[n] =  float('NaN')
+                            n = n+1
                         local_mean = np.nanmean(local_set)
                         ht_diff = local_mean - float(bright_bands[i_ht,2])
                         if ht_diff > ht_exc:
