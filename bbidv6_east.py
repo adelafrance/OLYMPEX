@@ -405,7 +405,7 @@ for i_day in range(0,days_in_series):
 '''
 If temporal continuity is required
 '''
-print(bright_bands[0,:])
+
 if require_time_cont:
     #assess temporal continuity > x hours for stratiform
     i_begin = 1 #start at 1 since row 0 is just placeholders for columns
@@ -438,7 +438,6 @@ if require_time_cont:
                     if i_ht<(ntimes-5) and i_ht > 5:
                         subset = bright_bands[(i_ht-5):(i_ht+5),2]
                         local_set = [float(v) for u,v in enumerate(subset) if bright_bands[int(u),1] in ['1','2']]
-                        test_u = [float(u) for u,v in enumerate(subset) if bright_bands[int(u),1] in ['1','2']]
                         local_mean = np.nanmean(local_set)
                         ht_diff = local_mean - float(bright_bands[i_ht,2])
                         if ht_diff > ht_exc:

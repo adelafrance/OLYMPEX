@@ -33,7 +33,7 @@ Setup input
 
 nodes = 16 #how many processors to run (623 computers seem to work well on 16, 24 was slower due to communication between computers)
 
-dir = 'east' #look east or west (lowercase)
+dir = 'west' #look east or west (lowercase)
 
 use_rhohv = True
 use_ZDR = False
@@ -47,7 +47,7 @@ big_rad_dim = 60.0 #outer bounds of the radar scan, beyond 60 beam smoothing bec
 
 dBZ_exceed_val = 25.0 #threshold value that any vertical column for given x,y to be considered
 min_ave_dBZ = 15.0 #threshold for whether or not to use second mode layer
-bb_crit_1 =35.0 #percentage of cells that need to have a value above the exceed level within rhohv range
+bb_crit_1 =15.0 #percentage of cells that need to have a value above the exceed level within rhohv range
 n_levels_allowed = 1 #number of levels allowed to select from above or below the mode (each level is 0.5km)
 
 time_cont = 0 #hours of temporal continuity needed for a bright band to be stratiform
@@ -421,7 +421,7 @@ if require_time_cont:
                 end_time = datetime.datetime.strptime(bright_bands[ntimes,0], "%m/%d/%y %H:%M:%S")
             tdelta = end_time - start_time #outputs difference in seconds
             tdelta_hours = tdelta.seconds/3600 #3600 seconds in an hour
-            if tdelta_hours > np.abs(time_cont):
+            if tdelta_hours >= np.abs(time_cont):
                 period_kept = True
                 if time_cont > 0:
                     bright_bands[i_begin:i_end,1] = 1
@@ -435,8 +435,9 @@ if require_time_cont:
                 height_mean = np.nanmean(vals)
                 for i_ht in range(i_begin,i_end):
                     #try local mean window for tossing out stray values
-                    if i_ht<(ntimes-5) and i_ht >= 5:
-                        local_set = [i for i, v in enumerate(bright_bands[i_ht-5:i_ht+5,2]) if v in ['1','2']]
+                    if i_ht<(ntimes-5) and i_ht > 5:
+                        subset = bright_bands[(i_ht-5):(i_ht+5),2]
+                        local_set = [float(v) for u,v in enumerate(subset) if bright_bands[int(u),1] in ['1','2']]
                         local_mean = np.nanmean(local_set)
                         ht_diff = local_mean - float(bright_bands[i_ht,2])
                         if ht_diff > ht_exc:
