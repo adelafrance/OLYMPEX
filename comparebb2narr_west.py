@@ -24,7 +24,7 @@ dir = 'west' #look east or west (lowercase)
 
 output_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/' #location of previous output
 data_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Data/' #directory for local data
-bb_data = ''.join(['brightbandsfound_v6_r_5_time0.5x15.0pcntx25.0_withrhohv_0.910.97_',dir,'.npy'])
+bb_data = ''.join(['brightbandsfound_v6_r_6_time0x15.0pcntx25.0_withrhohv_0.910.97_',dir,'.npy'])
 sounding_data = 'NPOL_sounding_melt_levs.npy'
 NARR_data = 'NARR_at_NPOL.csv'
 save_name_data_csv = ''.join(['BrightBandsXNARRXNPOL_v6_r_6_time0x35.0pcntx25.0_withrhohv_0.910.97_',dir,'.csv'])
@@ -110,14 +110,14 @@ fig, ax = plt.subplots()
 days = dates.DayLocator(interval = 2)
 d_fmt = dates.DateFormatter('%m/%d/%y')
 ax.scatter(xdatesNARR,BrightBands_w_NARR[:,3], label = 'NARR Melt Level', color = 'gray',marker = 'o', s = 10)
-ax.scatter(xdatesNPOL,BrightBands_w_NARR[:,5], label = 'NPOL Sounding Level',color = "#1b9e77",marker = '^', s = 10)
-ax.plot(xdatesBB,BrightBands_w_NARR[:,1], label = 'NPOL Radar Level', color = 'blue',linestyle = '--', linewidth = 1.5)
+ax.scatter(xdatesNPOL,BrightBands_w_NARR[:,5], label = 'NPOL Sounding 0C',color = "#1b9e77",marker = '^', s = 10)
+ax.plot(xdatesBB,BrightBands_w_NARR[:,1], label = 'NPOL Algorithm BB', color = 'blue',linestyle = '--', linewidth = 1.25)
 
 #ax.xticks(xdatesNPOL,BrightBands_w_NARR[:,0])
 ax.xaxis.set_major_locator(days)
 ax.xaxis.set_major_formatter(d_fmt)
 ax.grid(True, linestyle = '--', linewidth = 0.5)
-ax.set_title(''.join(['OLYMPEX Bright Band Identification\nNPOL vs NARR - ',dir]))
+ax.set_title(''.join(['OLYMPEX Bright Band Identification\nNPOL radar,sounding + NARR - ',dir]))
 ax.set_ylabel('Height (km)')
 plt.setp(ax.get_xticklabels(), rotation=90)
 plt.legend(loc = 'upper right')

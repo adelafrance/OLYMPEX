@@ -48,7 +48,7 @@ big_rad_dim = 60.0 #outer bounds of the radar scan, beyond 60 beam smoothing bec
 dBZ_exceed_val = 25.0 #threshold value that any vertical column for given x,y to be considered
 min_ave_dBZ = 15.0 #threshold for whether or not to use second mode layer
 bb_crit_1 =35.0 #percentage of cells that need to have a value above the exceed level within rhohv range
-n_levels_allowed = 2 #number of levels allowed to select from above or below the mode (each level is 0.5km)
+n_levels_allowed = 2 #number of levels allowed to select from above the mode (each level is 0.5km) fixed at 1 level below
 
 time_cont = 0 #hours of temporal continuity needed for a bright band to be stratiform
 
@@ -72,17 +72,17 @@ rhi_dir = '/home/disk/bob/olympex/zebra/moments/npol_qc2/rhi/' #base directory f
 save_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/' #output directory for saved images
 data_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Data/' #directory for local data
 if use_rhohv:
-    save_name_fig = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withrhohv_',str(rhohv_min),str(rhohv_max),'_',dir,'.csv'])
 elif use_ZDR:
-    save_name_fig = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_withZDR_',str(ZDR_min),'_',dir,'.csv'])
 else:
-    save_name_fig = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.png'])
-    save_name_data = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.npy'])
-    save_name_data_csv = ''.join(['brightbandsfound_v6_rb_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.csv'])
+    save_name_fig = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.png'])
+    save_name_data = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.npy'])
+    save_name_data_csv = ''.join(['brightbandsfound_v6_r_6_time',str(time_cont),'x',str(bb_crit_1),'pcntx',str(dBZ_exceed_val),'_',dir,'.csv'])
 
 NARR_data = 'NARR_at_NPOL.csv'
 save_fn_fig = ''.join([save_dir,save_name_fig])
@@ -293,10 +293,8 @@ def main_func(i):
                 dBZ_met1 = np.where(dBZ[0,:,y_ind,x_ind] >= dBZ_exceed_val)[0]
                 if period_mode == 0:
                     dBZ_met = [x for x in dBZ_met1 if x in range(period_mode,(period_mode+(n_levels_allowed)+1))]
-                elif period_mode == 1:
-                    dBZ_met = [x for x in dBZ_met1 if x in range(period_mode-1,(period_mode+(n_levels_allowed)+1))]
                 else:
-                    dBZ_met = [x for x in dBZ_met1 if x in range((period_mode-n_levels_allowed),(period_mode+(n_levels_allowed)+1))]
+                    dBZ_met = [x for x in dBZ_met1 if x in range((period_mode-1),(period_mode+(n_levels_allowed)+1))]
                 matched_layer = [x for x in dBZ_met]
                 bb_layer = float('NaN') #initializing nothing found yet
 
@@ -312,8 +310,9 @@ def main_func(i):
                         bb_layer = float('NaN')
                     else:
                         bb_layer = np.float64(np.where(dBZ[0,:,y_ind,x_ind] == np.nanmax(dBZ[0,matched_layer,y_ind,x_ind]))[0][0])#the layer that has the max reflectivity
+                        n_matched = n_matched + 1
                     bb_melt_levs[y_ind,x_ind] = np.float64(bb_layer*0.5)#0.5km vertical resolution
-                    n_matched = n_matched + 1
+
 
             #something in the reflectivity scan but none that exceed the reflectivity values
             elif max_col_dBZ < dBZ_exceed_val and max_col_dBZ > 0:
