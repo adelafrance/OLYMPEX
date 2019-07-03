@@ -55,8 +55,8 @@ bb_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/' #output direc
 save_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/Secondary/' #output directory for saved images
 data_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Data/' #directory for local data
 
-save_fn_data = ''.join(['secondary_',str(secondary_crit),'X',str(excd_prcnt),'excd_',dir,'.npy'])
-save_fn_data_csv = ''.join(['secondary_',str(secondary_crit),'X',str(excd_prcnt),'excd_',dir,'.csv'])
+save_fn_data = ''.join([save_dir,'secondary_',str(secondary_crit),'X',str(excd_prcnt),'excd_',dir,'.npy'])
+save_fn_data_csv = ''.join([save_dir,'secondary_',str(secondary_crit),'X',str(excd_prcnt),'excd_',dir,'.csv'])
 
 #load latest bright band data from BBIDv6
 if dir == 'east':
@@ -259,8 +259,13 @@ def main_func(i):
                 #which layers exceed the slope fit above the bright band layer?
                 if period_mode == bb_lev_up:
                     exceed_levs = [z for z in range((period_mode),(period_mode+(n_levels_allowed)+1)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+                elif period_mode == len(fit_dBZ_line)-1:
+                    exceed_levs = [z for z in range((period_mode-1),(period_mode+1)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+                elif period_mode == len(fit_dBZ_line)-2:
+                    exceed_levs = [z for z in range((period_mode-1),(period_mode+2)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
                 else:
-                    exceed_levs = [z for z in range((period_mode-1),(period_mode+(n_levels_allowed)+1)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+                    exceed_levs = [z for z in range((period_mode-1),(period_mode+n_levels_allowed+1)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+
                 if len(exceed_levs) == 0:
                     low_enhance_lev.append(float('NaN'))
                     high_enhance_lev.append(float('NaN'))
@@ -308,6 +313,8 @@ pool = mp.Pool(processes=nodes)
 results = pool.map_async(main_func, range(numfiles))
 secondary = np.vstack((secondary,results.get()))
 
+#sort by NPOL date/time
+secondary= secondary[secondary[:,0].argsort()]
 
 np.save(save_fn_data,secondary)
 pd.DataFrame(secondary).to_csv(save_fn_data_csv)
