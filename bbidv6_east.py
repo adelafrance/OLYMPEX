@@ -31,7 +31,7 @@ startTime = datetime.datetime.now()
 Setup input
 '''
 
-nodes = 16 #how many processors to run (623 computers seem to work well on 16, 24 was slower due to communication between computers)
+nodes = 1#how many processors to run (623 computers seem to work well on 16, 24 was slower due to communication between computers)
 
 dir = 'east' #look east or west (lowercase)
 
@@ -132,6 +132,8 @@ for date in date_list:
             filelist.append(file)
 
 numfiles = len(filelist)
+#np.save('/home/disk/meso-home/adelaf/OLYMPEX/Data/filelist.npy', np.asarray(filelist))
+#np.save('/home/disk/meso-home/adelaf/OLYMPEX/Data/date_list.npy', np.asarray(date_list))
 
 #bring in NARR data
 df=pd.read_csv(NARR_fn, sep=',',header=None)
