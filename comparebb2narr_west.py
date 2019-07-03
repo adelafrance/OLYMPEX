@@ -117,6 +117,7 @@ ax.plot(xdatesBB,BrightBands_w_NARR[:,1], label = 'NPOL Algorithm BB', color = '
 ax.xaxis.set_major_locator(days)
 ax.xaxis.set_major_formatter(d_fmt)
 ax.grid(True, linestyle = '--', linewidth = 0.5)
+ax.set_ylim([0.25,3.5])
 ax.set_title(''.join(['OLYMPEX Bright Band Identification\nNPOL radar,sounding + NARR - ',dir]))
 ax.set_ylabel('Height (km)')
 plt.setp(ax.get_xticklabels(), rotation=90)
