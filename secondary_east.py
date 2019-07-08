@@ -31,8 +31,10 @@ nodes = 4 #how many processors to run from
 
 dir = 'east' #lowercase
 
-excd_prcnt = 25 #percent value that must be exceeded over the slope fit of the grid cells above the bright band
+excd_prcnt = 30 #percent value that must be exceeded over the slope fit of the grid cells above the bright band
+excd_val = 6 #dBZ value above the fitted line that a cell needs to be exceeded to be counted
 
+##try to keep this one same as BBIDV6? 15/35
 secondary_crit = 15 #percentage of cells that must meet criteria in order to say a secondary enhancement is found
 
 n_levels_allowed = 2 #number of levels allowed to select from above the mode (each level is 0.5km) fixed at 1 level below
@@ -55,8 +57,8 @@ bb_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/' #output direc
 save_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/Secondary/' #output directory for saved images
 data_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Data/' #directory for local data
 
-save_fn_data = ''.join([save_dir,'secondary_',str(secondary_crit),'X',str(excd_prcnt),'excd_',dir,'.npy'])
-save_fn_data_csv = ''.join([save_dir,'secondary_',str(secondary_crit),'X',str(excd_prcnt),'excd_',dir,'.csv'])
+save_fn_data = ''.join([save_dir,'secondary_B_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.npy'])
+save_fn_data_csv = ''.join([save_dir,'secondary_B_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.csv'])
 
 #load latest bright band data from BBIDv6
 if dir == 'east':
@@ -79,8 +81,8 @@ days_out = np.concatenate((np.arange(12,31),np.arange(1,20)))
 day_time_array = np.zeros([days_in_series,24])
 day_time_array[:,:] = -1#default to clear sky
 
-secondary = np.array([1,2,3,4,5,6,7,8,9,10]) #columns = date, anything above?, lower level of enhancement,
-#upper level of enhancement, mean height of enhancement,pecent cells met, period mode
+secondary = np.array([1,2,3,4,5,6,7,8,]) #columns = date, anything above?,
+#mean height of enhancement,pecent cells met, period mode, period mode rhohv, period mode dBZ, bb height
 
 '''
 Main functions
@@ -185,8 +187,8 @@ def main_func(i):
                             if ~np.isnan(rhohv_copy[i]):
                                 if rhohv_copy[i] < rhohv_min or rhohv_copy[i] > rhohv_max:
                                     rhohv_copy[i] = float('NaN')
-                        #rhohv_copy[rhohv_copy<rhohv_min] = float('NaN')
-                        #rhohv_copy[rhohv_copy>rhohv_max] = float('NaN')
+                        rhohv_copy[rhohv_copy<rhohv_min] = float('NaN')
+                        rhohv_copy[rhohv_copy>rhohv_max] = float('NaN')
                         rhohv_copy[0:bb_lev_up+1] = float('NaN')
                         if np.isnan(rhohv_copy).all():
                             min_rhohv_lev_for_mode[y_ind,x_ind] = float('NaN')
@@ -248,58 +250,90 @@ def main_func(i):
             fit_dBZ_line = np.concatenate(((np.full(bb_lev_up,float('NaN'))),np.asarray(slope*zabovebb+intercept)),axis = None)
 
         n_found = 0
+        n_found_rhohv = 0
         prcnt_cells_met = 0
+        prcnt_cells_met_rhohv = 0
         enhancement_found = 0
         peak_enhance_lev = []
-        low_enhance_lev = []
-        high_enhance_lev = []
+        #low_enhance_lev = []
+        #high_enhance_lev = []
+        peak_enhance_lev_rhohv = []
         #search through each column looking for an enhancement aloft near the mode layer
         for x_ind in range(x_dim):
             for y_ind in range(y_dim):
                 #which layers exceed the slope fit above the bright band layer?
+                #if period_mode == bb_lev_up:
+                    #exceed_levs = [z for z in range((period_mode),(period_mode+(n_levels_allowed)+1)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+                #elif period_mode == len(fit_dBZ_line)-1:
+                    #exceed_levs = [z for z in range((period_mode-1),(period_mode+1)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+                #elif period_mode == len(fit_dBZ_line)-2:
+                    #exceed_levs = [z for z in range((period_mode-1),(period_mode+2)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+                #else:
+                    #exceed_levs = [z for z in range((period_mode-1),(period_mode+n_levels_allowed+1)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+
+                #### or search for just a decrease in rhohv to within limits
                 if period_mode == bb_lev_up:
-                    exceed_levs = [z for z in range((period_mode),(period_mode+(n_levels_allowed)+1)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+                    exceed_levs_rhohv = [z for z in range((period_mode),(period_mode+(n_levels_allowed)+1)) if rhohv[0,z,y_ind,x_ind]>rhohv_min and rhohv[0,z,y_ind,x_ind]<rhohv_max]
                 elif period_mode == len(fit_dBZ_line)-1:
-                    exceed_levs = [z for z in range((period_mode-1),(period_mode+1)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+                    exceed_levs_rhohv = [z for z in range((period_mode-1),(period_mode+1)) if rhohv[0,z,y_ind,x_ind]>rhohv_min and rhohv[0,z,y_ind,x_ind]<rhohv_max]
                 elif period_mode == len(fit_dBZ_line)-2:
-                    exceed_levs = [z for z in range((period_mode-1),(period_mode+2)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+                    exceed_levs_rhohv = [z for z in range((period_mode-1),(period_mode+2)) if rhohv[0,z,y_ind,x_ind]>rhohv_min and rhohv[0,z,y_ind,x_ind]<rhohv_max]
                 else:
-                    exceed_levs = [z for z in range((period_mode-1),(period_mode+n_levels_allowed+1)) if dBZ[0,z,y_ind,x_ind]>(fit_dBZ_line[z]*(1+(excd_prcnt/100)))]
+                    exceed_levs_rhohv = [z for z in range((period_mode-1),(period_mode+n_levels_allowed+1)) if rhohv[0,z,y_ind,x_ind]>rhohv_min and rhohv[0,z,y_ind,x_ind]<rhohv_max]
+
+                exceed_levs = [z for z in range(bb_lev_up+1,(top_lev+1)) if dBZ[0,z,y_ind,x_ind] >= fit_dBZ_line[z]+excd_val]
 
                 if len(exceed_levs) == 0:
-                    low_enhance_lev.append(float('NaN'))
-                    high_enhance_lev.append(float('NaN'))
+                    #low_enhance_lev.append(float('NaN'))
+                    #high_enhance_lev.append(float('NaN'))
                     peak_enhance_lev.append(float('NaN'))
                 elif len(exceed_levs) == 1:
-                    low_enhance_lev.append(exceed_levs[0])
-                    high_enhance_lev.append(exceed_levs[0])
+                    #low_enhance_lev.append(exceed_levs[0])
+                    #high_enhance_lev.append(exceed_levs[0])
                     peak_enhance_lev.append(exceed_levs[0])
                     peak_diff = dBZ[0,exceed_levs,y_ind,x_ind]-fit_dBZ_line[exceed_levs]
                     n_found = n_found+1
                 elif len(exceed_levs) > 1:
-                    low_enhance_lev.append(np.nanmin(exceed_levs))
-                    high_enhance_lev.append(np.nanmax(exceed_levs))
+                    #low_enhance_lev.append(np.nanmin(exceed_levs))
+                    #high_enhance_lev.append(np.nanmax(exceed_levs))
                     diffs = dBZ[0,0:top_lev+1,y_ind,x_ind]-fit_dBZ_line
                     peak_enhance_lev.append(exceed_levs[np.nanargmax(diffs[exceed_levs])])
                     peak_diff = np.nanmax(diffs[exceed_levs])
                     n_found = n_found+1
 
+                if len(exceed_levs_rhohv) == 0:
+                    peak_enhance_lev_rhohv.append(float('NaN'))
+                elif len(exceed_levs_rhohv) == 1:
+                    peak_enhance_lev_rhohv.append(exceed_levs_rhohv[0])
+                    n_found_rhohv = n_found_rhohv+1
+                elif len(exceed_levs_rhohv) > 1:
+                    #which is a minimum within the bounds and above bb
+                    peak_lev_rhohv = exceed_levs_rhohv[np.nanargmin(rhohv[0,exceed_levs_rhohv,y_ind,x_ind])]
+                    peak_enhance_lev_rhohv.append(peak_lev_rhohv)
+                    n_found_rhohv = n_found_rhohv+1
+
         if n_found>0:
             prcnt_cells_met = np.float64(format((n_found/n_total)*100,'.2f'))
-            mean_low_enhance_lev = np.nanmean(low_enhance_lev)*0.5
-            mean_high_enhance_lev = np.nanmean(high_enhance_lev)*0.5
-            mean_peak_enhance_lev = np.nanmean(peak_enhance_lev)*0.5
+            #mean_low_enhance_lev = np.nanmean(low_enhance_lev)*0.5
+            #mean_high_enhance_lev = np.nanmean(high_enhance_lev)*0.5
+            mean_peak_enhance_lev = np.float64(format(np.nanmean(peak_enhance_lev)*0.5, '.2f'))
         else:
             prcnt_cells_met = 0
-            mean_low_enhance_lev = float('NaN')
-            mean_high_enhance_lev = float('NaN')
+            #mean_low_enhance_lev = float('NaN')
+            #mean_high_enhance_lev = float('NaN')
             mean_peak_enhance_lev = float('NaN')
-        if prcnt_cells_met>secondary_crit:
+        if n_found_rhohv>0:
+            prcnt_cells_met_rhohv = np.float64(format((n_found_rhohv/n_total)*100,'.2f'))
+            mean_peak_enhance_lev_rhohv = np.float64(format(np.nanmean(peak_enhance_lev_rhohv)*0.5,'.2f'))
+        else:
+            prcnt_cells_met_rhohv = 0
+            mean_peak_enhance_lev_rhohv = float('NaN')
+        if prcnt_cells_met>secondary_crit: #or prcnt_cells_met_rhohv>secondary_crit:
             enhancement_found = 1
-        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,mean_low_enhance_lev,mean_high_enhance_lev,mean_peak_enhance_lev,prcnt_cells_met,period_mode,period_mode_rhohv,period_mode_dBZ,bb_lev])
+        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,mean_peak_enhance_lev,prcnt_cells_met,period_mode,period_mode_rhohv,period_mode_dBZ,bb_lev])
     else:
         enhancement_found = 0
-        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN')])
+        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN')])
     #print(row_to_append)
     print(''.join(['Worker finished: ',outname]))
     return(row_to_append)
