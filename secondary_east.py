@@ -27,11 +27,11 @@ startTime = datetime.datetime.now()
 Thresholds and variables
 '''
 
-nodes = 1 #how many processors to run from
+nodes = 4 #how many processors to run from
 
 dir = 'east' #lowercase
 
-excd_val = 5 #dBZ value to exceed
+excd_val = 0 #dBZ value to exceed
 
 min_dBZ = 15
 
@@ -53,8 +53,8 @@ bb_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/' #output direc
 save_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/Secondary/' #output directory for saved images
 data_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Data/' #directory for local data
 
-save_fn_data = ''.join([save_dir,'secondary_C_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.npy'])
-save_fn_data_csv = ''.join([save_dir,'secondary_C_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.csv'])
+save_fn_data = ''.join([save_dir,'secondary_D_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.npy'])
+save_fn_data_csv = ''.join([save_dir,'secondary_D_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.csv'])
 
 #load latest bright band data from BBIDv6
 if dir == 'east':
@@ -179,6 +179,7 @@ def main_func(i):
             if ~np.isnan(dBZ[0,i,:,:]).all():
                 dBZ_means[i] = np.nanmean(dBZ[0,i,:,:])
 
+        #print(dBZ_means)
         where_nan = np.argwhere(~np.isnan(dBZ_means[:]))
         top_lev = np.max(where_nan)
 
@@ -193,14 +194,13 @@ def main_func(i):
         for x_ind in range(x_dim):
             for y_ind in range(y_dim):
                 deltas = np.full(top_lev,float('NaN'))
-                #exceed_levs = [z for z in range(bb_lev_up,(top_lev)) if dBZ[0,z,y_ind,x_ind] >= fit_dBZ_line[z]+excd_val]
                 if ~np.isnan(dBZ[0,bb_lev:top_lev+1,y_ind,x_ind]).all():
                     for z in range(1,top_lev):
                         deltas[z] = ((dBZ[0,z,y_ind,x_ind]-dBZ[0,z-1,y_ind,x_ind]))
 
                     #above bright band, where does delta become positive
-                    low_enhance = next((i for i, v in enumerate(deltas) if v > excd_val and i > bb_lev), float('NaN'))
-                    high_enhance = next((i-1 for i, v in enumerate(deltas) if v < (-excd_val) and i > low_enhance), float('NaN'))
+                    low_enhance = next((i for i, v in enumerate(deltas) if v > 0 and i > bb_lev), float('NaN'))
+                    high_enhance = next((i-1 for i, v in enumerate(deltas) if v < 0 and i > low_enhance), float('NaN'))
 
                 else:
                     low_enhance = float('NaN')
@@ -231,19 +231,25 @@ def main_func(i):
             mean_low_enhance_lev = np.float64(format(np.nanmean(low_enhance_lev)*0.5, '.2f'))
             mean_high_enhance_lev = np.float64(format(np.nanmean(high_enhance_lev)*0.5, '.2f'))
             mean_peak_enhance_lev = np.float64(format(np.nanmean(peak_enhance_lev)*0.5, '.2f'))
-
+            nearest_low = np.int(np.round(np.nanmean(low_enhance_lev),0))-1
+            nearest_high = np.int(np.round(np.nanmean(high_enhance_lev),0))+1
+            deltas_means = np.full(top_lev,float('NaN'))
+            for z in range(1,top_lev):
+                deltas_means[z] = ((dBZ_means[z]-dBZ_means[z-1]))
+                if deltas_means[z] > excd_val and nearest_low <= z <= nearest_high:
+                    enhancement_found = 1
         else:
             prcnt_cells_met = 0
             mean_low_enhance_lev = float('NaN')
             mean_high_enhance_lev = float('NaN')
             mean_peak_enhance_lev = float('NaN')
-        if prcnt_cells_met>secondary_crit: #or prcnt_cells_met_rhohv>secondary_crit:
-            enhancement_found = 1
+            enhancement_found = 0
         row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,mean_peak_enhance_lev,mean_low_enhance_lev,mean_high_enhance_lev,prcnt_cells_met,bb_lev])
     else:
         enhancement_found = 0
         row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,float('NaN'),float('NaN'),float('NaN'), float('NaN'),float('NaN')])
-    print(row_to_append)
+
+    #print(row_to_append)
     print(''.join(['Worker finished: ',outname]))
     return(row_to_append)
 
