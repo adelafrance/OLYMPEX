@@ -21,6 +21,8 @@ import sys
 import math
 from scipy import stats
 
+np.set_printoptions(threshold=sys.maxsize)
+
 startTime = datetime.datetime.now()
 
 '''
@@ -34,6 +36,11 @@ dir = 'east' #lowercase
 excd_val = 0 #dBZ value to exceed
 
 min_dBZ = 15
+
+overlap = 20 # % overlap for cell in beam spread
+
+grid_step = 20 #km
+n_grids_needed = 1
 
 ##try to keep this one same as BBIDV6? 15/35
 secondary_crit = 15 #percentage of cells that must meet criteria in order to say a secondary enhancement is found
@@ -77,7 +84,7 @@ days_out = np.concatenate((np.arange(12,31),np.arange(1,20)))
 day_time_array = np.zeros([days_in_series,24])
 day_time_array[:,:] = -1#default to clear sky
 
-secondary = np.array([1,2,3,4,5,6,7]) #columns = date, anything above?,
+secondary = np.array([1,2,3,4,5,6]) #columns = date, anything above?,
 #mean height of enhancement,pecent cells met, bb height
 
 '''
@@ -184,70 +191,57 @@ def main_func(i):
         top_lev = np.max(where_nan)
 
         n_found = 0
-        n_found_rhohv = 0
         prcnt_cells_met = 0
         enhancement_found = 0
         low_enhance_lev = []
         high_enhance_lev = []
         peak_enhance_lev = []
-        #search through each column looking for an enhancement aloft
+
+        enhancement = np.full((y_dim,x_dim,2),float('NaN'))
+
+        #search all of x, y cell by cell and put low and high enhancement levels in an array
         for x_ind in range(x_dim):
             for y_ind in range(y_dim):
                 deltas = np.full(top_lev,float('NaN'))
                 if ~np.isnan(dBZ[0,bb_lev:top_lev+1,y_ind,x_ind]).all():
                     for z in range(1,top_lev):
                         deltas[z] = ((dBZ[0,z,y_ind,x_ind]-dBZ[0,z-1,y_ind,x_ind]))
-
                     #above bright band, where does delta become positive
-                    low_enhance = next((i for i, v in enumerate(deltas) if v > 0 and i > bb_lev), float('NaN'))
-                    high_enhance = next((i-1 for i, v in enumerate(deltas) if v < 0 and i > low_enhance), float('NaN'))
+                    low_enhance = next((i for i, v in enumerate(deltas) if v > excd_val and i > bb_lev), float('NaN'))
+                    high_enhance = next((i-1 for i, v in enumerate(deltas) if v < (-excd_val) and i > low_enhance), low_enhance)
+                    enhancement[y_ind,x_ind,0] = low_enhance
+                    enhancement[y_ind,x_ind,1] = high_enhance
 
-                else:
-                    low_enhance = float('NaN')
-                    high_enhance = float('NaN')
+        low_enhance_mode = np.int(mode1(enhancement[:,:,0])[0])
+        high_enhance_mode = np.int(mode1(enhancement[:,:,1])[0])
+        low_enhance_mean = np.float64(format(np.nanmean(enhancement[:,:,0])*0.5,'.2f'))
+        high_enhance_mean = np.float64(format(np.nanmean(enhancement[:,:,1])*0.5,'.2f'))
 
-                if np.isnan(low_enhance): #didnt find any enhnacement
-                    pass
-                elif np.isnan(high_enhance) and ~np.isnan(low_enhance): #found a low layer but not a high layer, take lower layer as enhancement
-                    low_enhance_lev.append(low_enhance)
-                    high_enhance_lev.append(low_enhance)
-                    peak_enhance_lev.append(low_enhance)
-                    n_found = n_found+1
-                elif low_enhance == high_enhance: #found a single layer of enhancement
-                    low_enhance_lev.append(low_enhance)
-                    high_enhance_lev.append(high_enhance)
-                    peak_enhance_lev.append(low_enhance)
-                    n_found = n_found+1
-                else: #found a multi-layer enhnancement
-                    low_enhance_lev.append(low_enhance)
-                    high_enhance_lev.append(high_enhance)
-                    peak_enhance = np.argmax(dBZ[0,low_enhance:high_enhance+1,y_ind,x_ind])+low_enhance
-                    peak_enhance_lev.append(peak_enhance)
-                    n_found = n_found+1
+        #do any grid boxes have an enhancement above threshold dBZ
+        grid_list = np.arange(0,300,grid_step)
+        for x in grid_list:
+            for y in grid_list:
+                dBZ_subset = dBZ[0,:,x:x+grid_step,y:y+grid_step]
+                n_data = np.count_nonzero(~np.isnan(np.nanmax(dBZ_subset,axis = 0)))
+                if n_data >= (grid_step*grid_step*(overlap/100)):
+                    dBZ_subset_means = np.full(top_lev,float('NaN'))
+                    deltas = np.full(top_lev,float('NaN'))
+                    for z in range(0,top_lev):
+                        dBZ_subset_means[z] = np.nanmean(dBZ_subset[z,:,:])
+                        if z > 0:
+                            deltas[z] = (dBZ_subset_means[z]-dBZ_subset_means[z-1])
+                        #at this grid box, does a secondary enhancement exist
+                        if low_enhance_mode <= z <= high_enhance_mode:
+                            if deltas[z] > excd_val:
+                                n_found += 1
+                                enhancement_found = 1
 
 
-        if n_found>0:
-            prcnt_cells_met = np.float64(format((n_found/n_total)*100,'.2f'))
-            mean_low_enhance_lev = np.float64(format(np.nanmean(low_enhance_lev)*0.5, '.2f'))
-            mean_high_enhance_lev = np.float64(format(np.nanmean(high_enhance_lev)*0.5, '.2f'))
-            mean_peak_enhance_lev = np.float64(format(np.nanmean(peak_enhance_lev)*0.5, '.2f'))
-            nearest_low = np.int(np.round(np.nanmean(low_enhance_lev),0))-1
-            nearest_high = np.int(np.round(np.nanmean(high_enhance_lev),0))+1
-            deltas_means = np.full(top_lev,float('NaN'))
-            for z in range(1,top_lev):
-                deltas_means[z] = ((dBZ_means[z]-dBZ_means[z-1]))
-                if deltas_means[z] > excd_val and nearest_low <= z <= nearest_high:
-                    enhancement_found = 1
-        else:
-            prcnt_cells_met = 0
-            mean_low_enhance_lev = float('NaN')
-            mean_high_enhance_lev = float('NaN')
-            mean_peak_enhance_lev = float('NaN')
-            enhancement_found = 0
-        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,mean_peak_enhance_lev,mean_low_enhance_lev,mean_high_enhance_lev,prcnt_cells_met,bb_lev])
+
+        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,low_enhance_mean,high_enhance_mean,n_found,bb_lev])
     else:
         enhancement_found = 0
-        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,float('NaN'),float('NaN'),float('NaN'), float('NaN'),float('NaN')])
+        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,float('NaN'),float('NaN'),float('NaN'),float('NaN')])
 
     #print(row_to_append)
     print(''.join(['Worker finished: ',outname]))
