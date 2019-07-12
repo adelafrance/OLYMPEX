@@ -33,7 +33,7 @@ nodes = 4 #how many processors to run from
 
 dir = 'east' #lowercase
 
-excd_val = 0 #dBZ value to exceed
+excd_val = 4 #dBZ value to exceed
 
 min_dBZ = 15
 
