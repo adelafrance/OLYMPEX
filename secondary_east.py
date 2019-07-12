@@ -21,8 +21,6 @@ import sys
 import math
 from scipy import stats
 
-np.set_printoptions(threshold=sys.maxsize)
-
 startTime = datetime.datetime.now()
 
 '''
@@ -34,13 +32,9 @@ nodes = 4 #how many processors to run from
 dir = 'east' #lowercase
 
 excd_val = 4 #dBZ value to exceed
+neg_excd_val = -5
 
 min_dBZ = 15
-
-overlap = 20 # % overlap for cell in beam spread
-
-grid_step = 20 #km
-n_grids_needed = 1
 
 ##try to keep this one same as BBIDV6? 15/35
 secondary_crit = 15 #percentage of cells that must meet criteria in order to say a secondary enhancement is found
@@ -60,8 +54,12 @@ bb_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/' #output direc
 save_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/Secondary/' #output directory for saved images
 data_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Data/' #directory for local data
 
-save_fn_data = ''.join([save_dir,'secondary_D_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.npy'])
-save_fn_data_csv = ''.join([save_dir,'secondary_D_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.csv'])
+sounding_data = 'NPOL_sounding_15_levs.npy'
+sounding_fn = ''.join([bb_dir,sounding_data])
+NPOL_data = np.load(sounding_fn)
+
+save_fn_data = ''.join([save_dir,'secondary_C_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.npy'])
+save_fn_data_csv = ''.join([save_dir,'secondary_C_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.csv'])
 
 #load latest bright band data from BBIDv6
 if dir == 'east':
@@ -77,15 +75,23 @@ date_list_fn = ''.join([data_dir,'date_list.npy'])
 filelist_fn = ''.join([data_dir,'filelist.npy'])
 date_list = np.load(date_list_fn)
 filelist = np.load(filelist_fn)
+filelist.sort()
 numfiles = len(filelist)
+numfiles = 100
 days_in_series = len(date_list)
 days_out = np.concatenate((np.arange(12,31),np.arange(1,20)))
 
 day_time_array = np.zeros([days_in_series,24])
 day_time_array[:,:] = -1#default to clear sky
 
-secondary = np.array([1,2,3,4,5,6]) #columns = date, anything above?,
+secondary = np.array([1,2,3,4,5,6,7]) #columns = date, anything above?,
 #mean height of enhancement,pecent cells met, bb height
+
+n_NPOLs = NPOL_data.shape[0]
+items_NPOL = []
+for h in range(0,n_NPOLs-1):
+    items_NPOL.append(datetime.datetime.strptime(NPOL_data[h+1,0], "%m/%d/%y %H:%M:%S:"))
+
 
 '''
 Main functions
@@ -105,6 +111,7 @@ def mode2(x): #second most commonly occurring level
 
 def main_func(i):
     date = ''.join([filelist[i].split(".")[1],'/'])
+    outdate = filelist[i].split(".")[1]
     file = filelist[i].split(".")[2]
     date_folder = ''.join([rhi_dir,date])
     file_path = ''.join([date_folder,filelist[i]])
@@ -136,7 +143,9 @@ def main_func(i):
     second = date.strftime("%S")
 
     bb_index = np.where(bright_bands[:,0]==date.strftime("%m/%d/%y %H:%M:%S"))[0][0]
-
+    plot_array = np.full((x_dim,y_dim),float('NaN'))
+    dBZ_means = np.full(z_dim, float('NaN'))
+    enhancement_true = False
     if bright_bands[bb_index,1] ==  '1': #there was a bright band found from bbidv6
 
         day_out = np.where(days_out == int(day))[0][0]
@@ -179,71 +188,149 @@ def main_func(i):
         elif bb_diff <= 0:
             bb_lev_up = np.int(bb_lev + min_sep)
 
-        #bb_lev_up = np.int(math.ceil(np.float64(bb_ht) * 2))+1# Rounds up to next level, then adds an additional layer above the bright band.
+        #bb_lev_up = np.int(math.ceil(np.float64(bb_ht) * 2))# Rounds up to next level
 
-        dBZ_means = np.full(z_dim, float('NaN'))
+
         for i in range(z_dim):
             if ~np.isnan(dBZ[0,i,:,:]).all():
                 dBZ_means[i] = np.nanmean(dBZ[0,i,:,:])
 
-        #print(dBZ_means)
         where_nan = np.argwhere(~np.isnan(dBZ_means[:]))
         top_lev = np.max(where_nan)
 
+        plot_z = range(16)
+        plot_z_hts = [z*0.5 for z in plot_z]
+
         n_found = 0
+        n_found_rhohv = 0
         prcnt_cells_met = 0
         enhancement_found = 0
         low_enhance_lev = []
         high_enhance_lev = []
         peak_enhance_lev = []
 
-        enhancement = np.full((y_dim,x_dim,2),float('NaN'))
-
-        #search all of x, y cell by cell and put low and high enhancement levels in an array
+        #search through each column looking for an enhancement aloft
         for x_ind in range(x_dim):
             for y_ind in range(y_dim):
                 deltas = np.full(top_lev,float('NaN'))
+                dBZ_column = np.full(top_lev,float('NaN'))
                 if ~np.isnan(dBZ[0,bb_lev:top_lev+1,y_ind,x_ind]).all():
                     for z in range(1,top_lev):
                         deltas[z] = ((dBZ[0,z,y_ind,x_ind]-dBZ[0,z-1,y_ind,x_ind]))
+                        dBZ_column[z] = dBZ[0,z,y_ind,x_ind]
+
                     #above bright band, where does delta become positive
-                    low_enhance = next((i for i, v in enumerate(deltas) if v > excd_val and i > bb_lev), float('NaN'))
-                    high_enhance = next((i-1 for i, v in enumerate(deltas) if v < (-excd_val) and i > low_enhance), low_enhance)
-                    enhancement[y_ind,x_ind,0] = low_enhance
-                    enhancement[y_ind,x_ind,1] = high_enhance
+                    low_enhance = next((i for i, v in enumerate(deltas) if v > excd_val and i > bb_lev_up), float('NaN'))
+                    if ~np.isnan(low_enhance):
+                        low_enhance_dBZ = dBZ[0,low_enhance-1,y_ind,x_ind]
+                        high_enhance = next((i-1 for i, v in enumerate(deltas) if v < neg_excd_val and i > low_enhance), low_enhance)
+                    else:
+                        high_enhance = float('NaN')
 
-        low_enhance_mode = np.int(mode1(enhancement[:,:,0])[0])
-        high_enhance_mode = np.int(mode1(enhancement[:,:,1])[0])
-        low_enhance_mean = np.float64(format(np.nanmean(enhancement[:,:,0])*0.5,'.2f'))
-        high_enhance_mean = np.float64(format(np.nanmean(enhancement[:,:,1])*0.5,'.2f'))
+                else:
+                    low_enhance = float('NaN')
+                    high_enhance = float('NaN')
 
-        #do any grid boxes have an enhancement above threshold dBZ
-        grid_list = np.arange(0,300,grid_step)
-        for x in grid_list:
-            for y in grid_list:
-                dBZ_subset = dBZ[0,:,x:x+grid_step,y:y+grid_step]
-                n_data = np.count_nonzero(~np.isnan(np.nanmax(dBZ_subset,axis = 0)))
-                if n_data >= (grid_step*grid_step*(overlap/100)):
-                    dBZ_subset_means = np.full(top_lev,float('NaN'))
-                    deltas = np.full(top_lev,float('NaN'))
-                    for z in range(0,top_lev):
-                        dBZ_subset_means[z] = np.nanmean(dBZ_subset[z,:,:])
-                        if z > 0:
-                            deltas[z] = (dBZ_subset_means[z]-dBZ_subset_means[z-1])
-                        #at this grid box, does a secondary enhancement exist
-                        if low_enhance_mode <= z <= high_enhance_mode:
-                            if deltas[z] > excd_val:
-                                n_found += 1
-                                enhancement_found = 1
+                if np.isnan(low_enhance): #didnt find any enhnacement
+                    pass
+                elif low_enhance == high_enhance: #found a single layer of enhancement
+                    #print(dBZ_column)
+                    low_enhance_lev.append(low_enhance)
+                    high_enhance_lev.append(high_enhance)
+                    peak_enhance_lev.append(low_enhance)
+                    n_found += 1
+                    plot_array[x_ind,y_ind] = 1
+                else: #found a multi-layer enhnancement
+                    #print(dBZ_column)
+                    low_enhance_lev.append(low_enhance)
+                    high_enhance_lev.append(high_enhance)
+                    peak_enhance = np.argmax(dBZ[0,low_enhance:high_enhance+1,y_ind,x_ind])+low_enhance
+                    peak_enhance_lev.append(peak_enhance)
+                    n_found += 1
+                    plot_array[x_ind,y_ind] = 1
 
 
+        if n_found>0:
+            prcnt_cells_met = np.float64(format((n_found/n_total)*100,'.2f'))
+            mean_low_enhance_lev = np.float64(format(np.nanmean(low_enhance_lev)*0.5, '.2f'))
+            mean_high_enhance_lev = np.float64(format(np.nanmean(high_enhance_lev)*0.5, '.2f'))
+            mean_peak_enhance_lev = np.float64(format(np.nanmean(peak_enhance_lev)*0.5, '.2f'))
 
-        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,low_enhance_mean,high_enhance_mean,n_found,bb_lev])
+        else:
+            prcnt_cells_met = 0
+            mean_low_enhance_lev = float('NaN')
+            mean_high_enhance_lev = float('NaN')
+            mean_peak_enhance_lev = float('NaN')
+        if prcnt_cells_met>secondary_crit: #or prcnt_cells_met_rhohv>secondary_crit:
+            enhancement_found = 1
+            enhancement_true = True
+        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,mean_peak_enhance_lev,mean_low_enhance_lev,mean_high_enhance_lev,prcnt_cells_met,bb_lev])
     else:
+        prcnt_cells_met = float('NaN')
         enhancement_found = 0
-        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,float('NaN'),float('NaN'),float('NaN'),float('NaN')])
-
+        enhancement_true = False
+        row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,float('NaN'),float('NaN'),float('NaN'), float('NaN'),float('NaN')])
     #print(row_to_append)
+
+
+    datetime_object = datetime.datetime.strptime(row_to_append[0], "%m/%d/%y %H:%M:%S")
+    pivot = datetime_object
+
+    timedeltas = []
+    for j in range(0,len(items_NPOL)):
+        timedeltas.append(np.abs(pivot-items_NPOL[j]))
+    min_index = timedeltas.index(np.min(timedeltas)) +1
+    d2 = datetime.datetime.strptime(NPOL_data[min_index,0], '%m/%d/%y %H:%M:%S:').strftime('%m/%d/%y %H:%M:%S')
+    dend_ht = float(NPOL_data[min_index,1])/1000
+
+    smallRadius = plt.Circle((150,150), small_rad_dim, color = 'black', fill = False)
+    Radius20 = plt.Circle((150,150), 20, color = 'grey', linestyle = '--', fill = False)
+    Radius30 = plt.Circle((150,150), 30, color = 'grey', linestyle = '--', fill = False)
+    Radius40 = plt.Circle((150,150), 40, color = 'grey', linestyle = '--', fill = False)
+    Radius50 = plt.Circle((150,150), 50, color = 'grey', linestyle = '--', fill = False)
+    bigRadius = plt.Circle((150,150), big_rad_dim, color = 'black', fill = False)
+    fig, (ax1,ax2) = plt.subplots(1,2)
+    im = ax1.imshow(plot_array, origin = 'Lower')
+    ax1.add_artist(smallRadius)
+    ax1.add_artist(Radius20)
+    ax1.add_artist(Radius30)
+    ax1.add_artist(Radius40)
+    ax1.add_artist(Radius50)
+    ax1.add_artist(bigRadius)
+    ax1.set_xlim([85,215])
+    ax1.set_ylim([85,215])
+    ax1.axis('off')
+    #ax1.set_xlabel(''.join(['x (km)\n\n',str(prcnt_cells_met),'% cells satisfied']))
+    #ax1.set_ylabel('y (km)')
+    ax1.set_title(date.strftime(''.join(['%m/%d/%y %H:%M:%S\n\n',str(prcnt_cells_met),'% cells satisfied'])))
+    fig.text(0.27, 0.05, ''.join(['10 km inner, 60 km outer\ndashed rings every 10 km\n\n\nclosest sounding ',str(d2),]), horizontalalignment='center',fontsize=12)
+
+
+    if bright_bands[bb_index,1] ==  '1': #there was a bright band found from bbidv6
+        if enhancement_true:
+            lowline = plt.axhline(y=mean_low_enhance_lev*2, color='green', linestyle='-')
+            highline = plt.axhline(y=mean_high_enhance_lev*2, color='green', linestyle='-')
+        else:
+            lowline = plt.axhline(y=mean_low_enhance_lev*2, color='r', linestyle='-')
+            highline = plt.axhline(y=mean_high_enhance_lev*2, color='r', linestyle='-')
+        bbline = plt.axhline(y=np.float64(bb_ht)*2, color='grey', linestyle='-')
+        dendline = plt.axhline(y=np.float64(dend_ht)*2, color='blue', linestyle=':')
+        dbzs = ax2.plot(dBZ_means[0:16],plot_z, color = 'black')
+        ax2.add_artist(lowline)
+        ax2.add_artist(highline)
+        ax2.add_artist(bbline)
+        ax2.add_artist(dendline)
+        #ax2.set_ylim([0,8])
+        ax2.set_yticks(plot_z)
+        ax2.set_yticklabels(plot_z_hts)
+
+    ax2.set_xlabel(''.join(['mean dBZ']))
+    ax2.set_ylabel('height (km)')
+
+    ax2.set_title('scan averaged reflectivity')
+    plt.tight_layout()
+    plt.savefig(''.join(['/home/disk/meso-home/adelaf/OLYMPEX/olytestfigs/',outdate,file,'.png']))
+    plt.close()
     print(''.join(['Worker finished: ',outname]))
     return(row_to_append)
 
