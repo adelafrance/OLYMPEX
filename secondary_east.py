@@ -31,6 +31,8 @@ nodes = 4 #how many processors to run from
 
 dir = 'east' #lowercase
 
+plot_figs = True
+
 excd_val = 4 #dBZ value to exceed
 neg_excd_val = -5
 
@@ -272,65 +274,65 @@ def main_func(i):
         row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,float('NaN'),float('NaN'),float('NaN'), float('NaN'),float('NaN')])
     #print(row_to_append)
 
+    if plot_figs:
+        datetime_object = datetime.datetime.strptime(row_to_append[0], "%m/%d/%y %H:%M:%S")
+        pivot = datetime_object
 
-    datetime_object = datetime.datetime.strptime(row_to_append[0], "%m/%d/%y %H:%M:%S")
-    pivot = datetime_object
+        timedeltas = []
+        for j in range(0,len(items_NPOL)):
+            timedeltas.append(np.abs(pivot-items_NPOL[j]))
+        min_index = timedeltas.index(np.min(timedeltas)) +1
+        d2 = datetime.datetime.strptime(NPOL_data[min_index,0], '%m/%d/%y %H:%M:%S:').strftime('%m/%d/%y %H:%M:%S')
+        dend_ht = float(NPOL_data[min_index,1])/1000
 
-    timedeltas = []
-    for j in range(0,len(items_NPOL)):
-        timedeltas.append(np.abs(pivot-items_NPOL[j]))
-    min_index = timedeltas.index(np.min(timedeltas)) +1
-    d2 = datetime.datetime.strptime(NPOL_data[min_index,0], '%m/%d/%y %H:%M:%S:').strftime('%m/%d/%y %H:%M:%S')
-    dend_ht = float(NPOL_data[min_index,1])/1000
-
-    smallRadius = plt.Circle((150,150), small_rad_dim, color = 'black', fill = False)
-    Radius20 = plt.Circle((150,150), 20, color = 'grey', linestyle = '--', fill = False)
-    Radius30 = plt.Circle((150,150), 30, color = 'grey', linestyle = '--', fill = False)
-    Radius40 = plt.Circle((150,150), 40, color = 'grey', linestyle = '--', fill = False)
-    Radius50 = plt.Circle((150,150), 50, color = 'grey', linestyle = '--', fill = False)
-    bigRadius = plt.Circle((150,150), big_rad_dim, color = 'black', fill = False)
-    fig, (ax1,ax2) = plt.subplots(1,2)
-    im = ax1.imshow(plot_array, origin = 'Lower')
-    ax1.add_artist(smallRadius)
-    ax1.add_artist(Radius20)
-    ax1.add_artist(Radius30)
-    ax1.add_artist(Radius40)
-    ax1.add_artist(Radius50)
-    ax1.add_artist(bigRadius)
-    ax1.set_xlim([85,215])
-    ax1.set_ylim([85,215])
-    ax1.axis('off')
-    #ax1.set_xlabel(''.join(['x (km)\n\n',str(prcnt_cells_met),'% cells satisfied']))
-    #ax1.set_ylabel('y (km)')
-    ax1.set_title(date.strftime(''.join(['%m/%d/%y %H:%M:%S\n\n',str(prcnt_cells_met),'% cells satisfied'])))
-    fig.text(0.27, 0.05, ''.join(['10 km inner, 60 km outer\ndashed rings every 10 km\n\n\nclosest sounding ',str(d2),]), horizontalalignment='center',fontsize=12)
+        smallRadius = plt.Circle((150,150), small_rad_dim, color = 'black', fill = False)
+        Radius20 = plt.Circle((150,150), 20, color = 'grey', linestyle = '--', fill = False)
+        Radius30 = plt.Circle((150,150), 30, color = 'grey', linestyle = '--', fill = False)
+        Radius40 = plt.Circle((150,150), 40, color = 'grey', linestyle = '--', fill = False)
+        Radius50 = plt.Circle((150,150), 50, color = 'grey', linestyle = '--', fill = False)
+        bigRadius = plt.Circle((150,150), big_rad_dim, color = 'black', fill = False)
+        fig, (ax1,ax2) = plt.subplots(1,2)
+        im = ax1.imshow(plot_array, origin = 'Lower')
+        ax1.add_artist(smallRadius)
+        ax1.add_artist(Radius20)
+        ax1.add_artist(Radius30)
+        ax1.add_artist(Radius40)
+        ax1.add_artist(Radius50)
+        ax1.add_artist(bigRadius)
+        ax1.set_xlim([85,215])
+        ax1.set_ylim([85,215])
+        ax1.axis('off')
+        #ax1.set_xlabel(''.join(['x (km)\n\n',str(prcnt_cells_met),'% cells satisfied']))
+        #ax1.set_ylabel('y (km)')
+        ax1.set_title(date.strftime(''.join(['%m/%d/%y %H:%M:%S\n\n',str(prcnt_cells_met),'% cells satisfied'])))
+        fig.text(0.27, 0.05, ''.join(['10 km inner, 60 km outer\ndashed rings every 10 km\n\n\nclosest sounding ',str(d2),]), horizontalalignment='center',fontsize=12)
 
 
-    if bright_bands[bb_index,1] ==  '1': #there was a bright band found from bbidv6
-        if enhancement_true:
-            lowline = plt.axhline(y=mean_low_enhance_lev*2, color='green', linestyle='-')
-            highline = plt.axhline(y=mean_high_enhance_lev*2, color='green', linestyle='-')
-        else:
-            lowline = plt.axhline(y=mean_low_enhance_lev*2, color='r', linestyle='-')
-            highline = plt.axhline(y=mean_high_enhance_lev*2, color='r', linestyle='-')
-        bbline = plt.axhline(y=np.float64(bb_ht)*2, color='grey', linestyle='-')
-        dendline = plt.axhline(y=np.float64(dend_ht)*2, color='blue', linestyle=':')
-        dbzs = ax2.plot(dBZ_means[0:16],plot_z, color = 'black')
-        ax2.add_artist(lowline)
-        ax2.add_artist(highline)
-        ax2.add_artist(bbline)
-        ax2.add_artist(dendline)
-        #ax2.set_ylim([0,8])
-        ax2.set_yticks(plot_z)
-        ax2.set_yticklabels(plot_z_hts)
+        if bright_bands[bb_index,1] ==  '1': #there was a bright band found from bbidv6
+            if enhancement_true:
+                lowline = plt.axhline(y=mean_low_enhance_lev*2, color='green', linestyle='-')
+                highline = plt.axhline(y=mean_high_enhance_lev*2, color='green', linestyle='-')
+            else:
+                lowline = plt.axhline(y=mean_low_enhance_lev*2, color='r', linestyle='-')
+                highline = plt.axhline(y=mean_high_enhance_lev*2, color='r', linestyle='-')
+            bbline = plt.axhline(y=np.float64(bb_ht)*2, color='grey', linestyle='-')
+            dendline = plt.axhline(y=np.float64(dend_ht)*2, color='blue', linestyle=':')
+            dbzs = ax2.plot(dBZ_means[0:16],plot_z, color = 'black')
+            ax2.add_artist(lowline)
+            ax2.add_artist(highline)
+            ax2.add_artist(bbline)
+            ax2.add_artist(dendline)
+            #ax2.set_ylim([0,8])
+            ax2.set_yticks(plot_z)
+            ax2.set_yticklabels(plot_z_hts)
 
-    ax2.set_xlabel(''.join(['mean dBZ']))
-    ax2.set_ylabel('height (km)')
+            ax2.set_xlabel(''.join(['mean dBZ']))
+            ax2.set_ylabel('height (km)')
 
-    ax2.set_title('scan averaged reflectivity')
-    plt.tight_layout()
-    plt.savefig(''.join(['/home/disk/meso-home/adelaf/OLYMPEX/olytestfigs/',outdate,file,'.png']))
-    plt.close()
+            ax2.set_title('scan averaged reflectivity')
+            plt.tight_layout()
+            plt.savefig(''.join(['/home/disk/meso-home/adelaf/OLYMPEX/olytestfigs/',outdate,file,'.png']))
+            plt.close()
     print(''.join(['Worker finished: ',outname]))
     return(row_to_append)
 
