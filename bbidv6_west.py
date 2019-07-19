@@ -132,6 +132,8 @@ for date in date_list:
             filelist.append(file)
 
 numfiles = len(filelist)
+np.save('/home/disk/meso-home/adelaf/OLYMPEX/Data/filelist_west.npy', np.asarray(filelist))
+np.save('/home/disk/meso-home/adelaf/OLYMPEX/Data/date_list_west.npy', np.asarray(date_list))
 
 #bring in NARR data
 df=pd.read_csv(NARR_fn, sep=',',header=None)
