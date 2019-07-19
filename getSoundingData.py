@@ -7,10 +7,12 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+t_find = 0
+
 #sounding directory
 sound_dir = '/home/disk/bob/olympex/soundings/QC_Level4/netcdf/'
 save_dir = '/home/disk/meso-home/adelaf/OLYMPEX/Output/BrightBands/'
-save_fn = ''.join([save_dir,"NPOL_sounding_15_levs"])
+save_fn = ''.join([save_dir,"NPOL_sounding_",str(t_find),"_levs"])
 
 fn = 'OLYMPEX_upaL4.0_npol.nc'
 #missing values are -999.0
@@ -41,20 +43,17 @@ def find_nearest(array, value):
 for time in range(0,n_soundings):
     date = num2date(launch_time[time], units = time_units , calendar = 'standard')
     #ml = np.where(temp[time,:] < 0)[0][0]-1 #lowest level above 0 C
-    dend_lev = find_nearest(temp[time,:],(-15))
-    print(temp[time,dend_lev])
-    if temp[time,dend_lev]-(-15) > 0:
+    dend_lev = find_nearest(temp[time,:],(t_find))
+    if temp[time,dend_lev]-(t_find) > 0:
         low_lev = dend_lev
-        high_lev = dend_lev +1
+        high_lev = dend_lev + 1
     else:
-        low_lev = dend_lev -1
+        low_lev = dend_lev - 1
         high_lev = dend_lev
     low_alt = alt[time,low_lev]
     high_alt = alt[time,high_lev]
     delta_ht_delta_temp = ((high_alt - low_alt)/(temp[time,high_lev]-temp[time,low_lev]))
-    dend_ht = (delta_ht_delta_temp*(-15-temp[time,low_lev]))+low_alt
-    print(temp[time,low_lev], low_alt,temp[time,high_lev],high_alt)
-    print(dend_ht)
+    dend_ht = (delta_ht_delta_temp*(t_find-temp[time,low_lev]))+low_alt
 
     dend_ht = alt[time,dend_lev]
     data_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S:"),dend_ht])
