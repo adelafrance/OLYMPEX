@@ -2,7 +2,7 @@
 #June 28
 
 #algorithm aimed at identifying the secondary enhancement above the melging layer
-#ingests melting layer data identified by BBIDv6
+#ingests melting layer data identified by BBIDv6 and pulls in -15c height from NPOL
 
 from netCDF4 import Dataset, num2date, date2num
 from datetime import datetime
@@ -29,16 +29,18 @@ Thresholds and variables
 
 nodes = 4 #how many processors to run from
 
+plot_figs = False #diagnostic plots a plan view of cells that met criteria as well as a vertical plot of scan averaged reflectivity
+print_results = False #print the results for each time - turn off for multiprocessing computing
+run_100 = False #only run the first 100 times = Nov 12/13
+
 dir = 'east' #lowercase
 
-plot_figs = True
-
-excd_val = 4 #dBZ value to exceed
-neg_excd_val = -5
+excd_val_low = 4 #dBZ value to exceed to define the lower level
+excd_val_high = -4  #dBZ value to exceed to define the upper level
 
 min_dBZ = 15
 
-##try to keep this one same as BBIDV6? 15/35
+##try to keep this one same as BBIDV6? 15-east/35-west
 secondary_crit = 15 #percentage of cells that must meet criteria in order to say a secondary enhancement is found
 
 min_sep = 0 #number of levels needed between bright band and region to look within
@@ -60,8 +62,8 @@ sounding_data = 'NPOL_sounding_15_levs.npy'
 sounding_fn = ''.join([bb_dir,sounding_data])
 NPOL_data = np.load(sounding_fn)
 
-save_fn_data = ''.join([save_dir,'secondary_C_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.npy'])
-save_fn_data_csv = ''.join([save_dir,'secondary_C_',str(secondary_crit),'X',str(excd_val),'excd_',dir,'.csv'])
+save_fn_data = ''.join([save_dir,'secondary_C_',str(secondary_crit),'X',str(excd_val_low),'excd_',dir,'.npy'])
+save_fn_data_csv = ''.join([save_dir,'secondary_C_',str(secondary_crit),'X',str(excd_val_low),'excd_',dir,'.csv'])
 
 #load latest bright band data from BBIDv6
 if dir == 'east':
@@ -79,7 +81,8 @@ date_list = np.load(date_list_fn)
 filelist = np.load(filelist_fn)
 filelist.sort()
 numfiles = len(filelist)
-numfiles = 100
+if run_100:
+    numfiles = 100
 days_in_series = len(date_list)
 days_out = np.concatenate((np.arange(12,31),np.arange(1,20)))
 
@@ -145,7 +148,7 @@ def main_func(i):
     second = date.strftime("%S")
 
     bb_index = np.where(bright_bands[:,0]==date.strftime("%m/%d/%y %H:%M:%S"))[0][0]
-    plot_array = np.full((x_dim,y_dim),float('NaN'))
+    plot_array = np.full((y_dim,x_dim),float('NaN'))
     dBZ_means = np.full(z_dim, float('NaN'))
     enhancement_true = False
     if bright_bands[bb_index,1] ==  '1': #there was a bright band found from bbidv6
@@ -218,14 +221,14 @@ def main_func(i):
                 dBZ_column = np.full(top_lev,float('NaN'))
                 if ~np.isnan(dBZ[0,bb_lev:top_lev+1,y_ind,x_ind]).all():
                     for z in range(1,top_lev):
-                        deltas[z] = ((dBZ[0,z,y_ind,x_ind]-dBZ[0,z-1,y_ind,x_ind]))
+                        deltas[z] = ((dBZ[0,z,y_ind,x_ind]-dBZ[0,z-1,y_ind,x_ind])) #change in dBZ from lower level to current level
                         dBZ_column[z] = dBZ[0,z,y_ind,x_ind]
 
-                    #above bright band, where does delta become positive
-                    low_enhance = next((i for i, v in enumerate(deltas) if v > excd_val and i > bb_lev_up), float('NaN'))
+                    #above bright band, where does delta become positive and exceed threshold.
+                    low_enhance = next((i for i, v in enumerate(deltas) if v > excd_val_low and i > bb_lev_up), float('NaN'))
                     if ~np.isnan(low_enhance):
                         low_enhance_dBZ = dBZ[0,low_enhance-1,y_ind,x_ind]
-                        high_enhance = next((i-1 for i, v in enumerate(deltas) if v < neg_excd_val and i > low_enhance), low_enhance)
+                        high_enhance = next((i-1 for i, v in enumerate(deltas) if v < excd_val_high and i > low_enhance), low_enhance)
                     else:
                         high_enhance = float('NaN')
 
@@ -233,23 +236,21 @@ def main_func(i):
                     low_enhance = float('NaN')
                     high_enhance = float('NaN')
 
-                if np.isnan(low_enhance): #didnt find any enhnacement
+                if np.isnan(low_enhance): #didnt find any enhancement
                     pass
-                elif low_enhance == high_enhance: #found a single layer of enhancement
-                    #print(dBZ_column)
+                elif low_enhance == high_enhance: #found a single-layer enhancement
                     low_enhance_lev.append(low_enhance)
                     high_enhance_lev.append(high_enhance)
                     peak_enhance_lev.append(low_enhance)
                     n_found += 1
-                    plot_array[x_ind,y_ind] = 1
-                else: #found a multi-layer enhnancement
-                    #print(dBZ_column)
+                    plot_array[y_ind,x_ind] = 1
+                else: #found a multi-layer enhancement
                     low_enhance_lev.append(low_enhance)
                     high_enhance_lev.append(high_enhance)
                     peak_enhance = np.argmax(dBZ[0,low_enhance:high_enhance+1,y_ind,x_ind])+low_enhance
                     peak_enhance_lev.append(peak_enhance)
                     n_found += 1
-                    plot_array[x_ind,y_ind] = 1
+                    plot_array[y_ind,x_ind] = 1
 
 
         if n_found>0:
@@ -263,7 +264,7 @@ def main_func(i):
             mean_low_enhance_lev = float('NaN')
             mean_high_enhance_lev = float('NaN')
             mean_peak_enhance_lev = float('NaN')
-        if prcnt_cells_met>secondary_crit: #or prcnt_cells_met_rhohv>secondary_crit:
+        if prcnt_cells_met>secondary_crit:
             enhancement_found = 1
             enhancement_true = True
         row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,mean_peak_enhance_lev,mean_low_enhance_lev,mean_high_enhance_lev,prcnt_cells_met,bb_lev])
@@ -272,7 +273,9 @@ def main_func(i):
         enhancement_found = 0
         enhancement_true = False
         row_to_append = np.array([date.strftime("%m/%d/%y %H:%M:%S"),enhancement_found,float('NaN'),float('NaN'),float('NaN'), float('NaN'),float('NaN')])
-    #print(row_to_append)
+
+    if print_results:
+        print(row_to_append)
 
     if plot_figs:
         datetime_object = datetime.datetime.strptime(row_to_append[0], "%m/%d/%y %H:%M:%S")
@@ -302,8 +305,6 @@ def main_func(i):
         ax1.set_xlim([85,215])
         ax1.set_ylim([85,215])
         ax1.axis('off')
-        #ax1.set_xlabel(''.join(['x (km)\n\n',str(prcnt_cells_met),'% cells satisfied']))
-        #ax1.set_ylabel('y (km)')
         ax1.set_title(date.strftime(''.join(['%m/%d/%y %H:%M:%S\n\n',str(prcnt_cells_met),'% cells satisfied'])))
         fig.text(0.27, 0.05, ''.join(['10 km inner, 60 km outer\ndashed rings every 10 km\n\n\nclosest sounding ',str(d2),]), horizontalalignment='center',fontsize=12)
 
@@ -322,7 +323,6 @@ def main_func(i):
             ax2.add_artist(highline)
             ax2.add_artist(bbline)
             ax2.add_artist(dendline)
-            #ax2.set_ylim([0,8])
             ax2.set_yticks(plot_z)
             ax2.set_yticklabels(plot_z_hts)
 
