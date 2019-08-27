@@ -629,7 +629,7 @@ def main_func(i):
         #allow for selection of +/- 1 time period away from the bright band
         if bright_bands_SW[bb_index_SW,1] == '1':
             bb_ht_SW = (bright_bands_SW[bb_index_SW,2])
-        elif bright_bands_west[bb_index_west-1,1] == '1':
+        elif bright_bands_SW[bb_index_SW-1,1] == '1':
             bb_ht_SW = (bright_bands_SW[bb_index_SW-1,2])
         elif bright_bands_SW[bb_index_SW+1,1] == '1':
             bb_ht_SW = (bright_bands_SW[bb_index_SW+1,2])
@@ -638,7 +638,7 @@ def main_func(i):
 
         if bright_bands_WSW[bb_index_WSW,1] == '1':
             bb_ht_WSW = (bright_bands_WSW[bb_index_WSW,2])
-        elif bright_bands_west[bb_index_west-1,1] == '1':
+        elif bright_bands_WSW[bb_index_WSW-1,1] == '1':
             bb_ht_WSW = (bright_bands_WSW[bb_index_WSW-1,2])
         elif bright_bands_WSW[bb_index_WSW+1,1] == '1':
             bb_ht_WSW = (bright_bands_WSW[bb_index_WSW+1,2])
@@ -647,7 +647,7 @@ def main_func(i):
 
         if bright_bands_WNW[bb_index_WNW,1] == '1':
             bb_ht_WNW = (bright_bands_WNW[bb_index_WNW,2])
-        elif bright_bands_west[bb_index_west-1,1] == '1':
+        elif bright_bands_WNW[bb_index_WNW-1,1] == '1':
             bb_ht_WNW = (bright_bands_WNW[bb_index_WNW-1,2])
         elif bright_bands_WNW[bb_index_WNW+1,1] == '1':
             bb_ht_WNW = (bright_bands_WNW[bb_index_WNW+1,2])
@@ -656,7 +656,7 @@ def main_func(i):
 
         if bright_bands_NW[bb_index_NW,1] == '1':
             bb_ht_NW = (bright_bands_NW[bb_index_NW,2])
-        elif bright_bands_west[bb_index_west-1,1] == '1':
+        elif bright_bands_NW[bb_index_NW-1,1] == '1':
             bb_ht_NW = (bright_bands_NW[bb_index_NW-1,2])
         elif bright_bands_NW[bb_index_NW+1,1] == '1':
             bb_ht_NW = (bright_bands_NW[bb_index_NW+1,2])
@@ -696,7 +696,6 @@ def main_func(i):
                 dBZ_means_east[z_i] = np.nanmean(dBZ_east[0,z_i,:,:])
             if ~np.isnan(dBZ[0,z_i,:,:]).all():
                 dBZ_means[z_i] = np.nanmean(dBZ[0,z_i,:,:])
-                #ZDR_means[z_i] = np.nanmean(ZDR[0,z_i,:,:])
 
         where_nan_west = np.argwhere(~np.isnan(dBZ_means_west[:]))
         where_nan_east = np.argwhere(~np.isnan(dBZ_means_east[:]))
@@ -765,14 +764,6 @@ def main_func(i):
                 else:
                     top_lev = z_dim
                     bb_lev = float('NaN')
-
-
-                #if x_ind < (x_dim/2): #left half of domain => west
-                    #top_lev = top_lev_west
-                    #bb_lev = bb_lev_west
-                #else: #right half => east
-                    #top_lev = top_lev_east
-                    #bb_lev = bb_lev_east
 
                 deltas = np.full(top_lev,float('NaN'))
                 dBZ_column = np.full(top_lev,float('NaN'))
