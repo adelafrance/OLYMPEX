@@ -7,10 +7,11 @@ from netCDF4 import Dataset, num2date, date2num
 from datetime import datetime
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')  #raster rendering backend capable of writing png image to file
+#matplotlib.use('Agg')  #raster rendering backend capable of writing png image to file
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.basemap import Basemap
 from scipy import stats
 import datetime
 import os
@@ -28,7 +29,7 @@ startTime = datetime.datetime.now()
 THRESHOLDS AND VARIABLES
 """
 
-nodes = 16#how many processors to run (623 computers seem to work well on 16, 24 was slower due to communication between computers)
+nodes = 4 #how many processors to run (623 computers seem to work well on 16, 24 was slower due to communication between computers)
 
 #dir = sys.argv[1] #input from script call, east or west after script name, or all
 
@@ -183,7 +184,7 @@ NE = [30,60]
 SW = [210,240]
 WSW = [240,270]
 WNW = [270,300]
-NW = [300,326] #in the case of bright bands, not concerned with the number and dont want to be using vlaues twice
+NW = [296,326] #in the case of bright bands, not concerned with the number and dont want to be using values twice
 
 sectors = [NE,SW,WSW,WNW,NW]
 sector_names = ['NE', 'SW', 'WSW', 'WNW', 'NW']
@@ -391,7 +392,7 @@ if plot_sectors:
 
     im = ax1.imshow(NE_mask, origin = 'Lower', alpha = 0.5, cmap = cmap, vmin=0, vmax = 5)
     im = ax1.imshow(SW_mask, origin = 'Lower', alpha = 0.5, cmap = cmap, vmin=0, vmax = 5)
-    im = ax1.imshow(WSW_mask, origin = 'Lower', alpha = 0.5, cmap = cmap, vmin=0, vmax = 5)
+    im = ax1.imshow(WSW_mask, origin = 'Lower', alpha = 0.3, cmap = cmap, vmin=0, vmax = 5)
     im = ax1.imshow(WNW_mask, origin = 'Lower', alpha = 0.5, cmap = cmap, vmin=0, vmax = 5)
     im = ax1.imshow(NW_mask, origin = 'Lower', alpha = 0.5, cmap = cmap, vmin=0, vmax = 5)
 
@@ -440,7 +441,7 @@ def mode2(x): #second most commonly occurring level
     return values[n], counts[n]
 
 """
-COPIED DIRECTLY FROM BBIDV6 - NEED TO UPDATE TO CONFIGURATION OF SECONDARY.PY
+
 """
 def main_func(i):
     date = ''.join([filelist_west[i].split(".")[1],'/'])
@@ -566,7 +567,7 @@ def main_func(i):
     """
     INITIAL SEARCH FOR THE LEVEL OF MINIMUM IN RHOHV
     """
-    #Look through to find out where the maximum level is occurring at each grid point
+    #Look through to find out where the minimum rhohv level is occurring at each grid point
     for x_ind in range(x_dim):
         for y_ind in range(y_dim):
             temp_rhohv_lev_for_mode = float('NaN')
