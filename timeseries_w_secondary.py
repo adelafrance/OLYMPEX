@@ -9,7 +9,7 @@
 import numpy as np
 from numpy import genfromtxt
 import matplotlib
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import pandas as pd
 import datetime
 from datetime import timedelta
@@ -30,17 +30,20 @@ THRESHOLDS AND VARIABLES
 
 plot_NARR = False
 plot_NPOL_0C = True
-plot_NPOL_15C = False
+plot_NPOL_10C = True
+plot_NPOL_15C = True
 plot_BB = True
 plot_Secondary = True
 plot_Citation = True
 save_data = False
 
+plot_polar_figs = True #need to revist this. as is, not an effect way to show differences in polarimetric variables.
+
 #dates to start and end plot
 mon_start = 12
-day_start = 8
+day_start = 3
 mon_end = 12
-day_end = 9
+day_end = 3
 
 layer_within = 1.0 # +/- (Z) kilometers of other neighboring layers found.
 
@@ -84,18 +87,24 @@ bb_fn_WSW = ''.join([bb_dir, bb_data_WSW])
 bb_fn_WNW = ''.join([bb_dir, bb_data_WNW])
 bb_fn_NW = ''.join([bb_dir, bb_data_NW])
 
-sounding_data = 'NPOL_sounding_0_levs.npy'
+sounding_data_zero = 'NPOL_sounding_0_levs.npy'
+sounding_data_ten = 'NPOL_sounding_10_levs.npy'
+sounding_data_fifteen = 'NPOL_sounding_15_levs.npy'
 NARR_data = 'NARR_at_NPOL.csv'
 
-sounding_fn = ''.join([output_dir,sounding_data])
+sounding_fn_zero = ''.join([output_dir,sounding_data_zero])
+sounding_fn_ten = ''.join([output_dir,sounding_data_ten])
+sounding_fn_fifteen = ''.join([output_dir,sounding_data_fifteen])
 NARR_fn = ''.join([data_dir,NARR_data])
 
 if plot_all_sectors:
     save_name_fig = ''.join(['BB_w_Secondary_Sectors_','ALL','_',str(mon_start),'-',str(day_start),'to',str(mon_end),'-',str(day_end),'.png'])
     save_name_dist_fig = ''.join(['Secondary_Sectors_dist_','ALL','_',str(mon_start),'-',str(day_start),'to',str(mon_end),'-',str(day_end),'.png'])
+    save_name_polars_fig = ''.join(['Secondary_Sectors_polars_','ALL','_',str(mon_start),'-',str(day_start),'to',str(mon_end),'-',str(day_end),'.png'])
 else:
     save_name_fig = ''.join(['BB_w_Secondary_Sectors_',dir_str,'_',str(mon_start),'-',str(day_start),'to',str(mon_end),'-',str(day_end),'.png'])
     save_name_dist_fig = ''.join(['Secondary_Sectors_dist_',dir_str,'_',str(mon_start),'-',str(day_start),'to',str(mon_end),'-',str(day_end),'.png'])
+    save_name_polars_fig = ''.join(['Secondary_Sectors_polars_',dir_str,'_',str(mon_start),'-',str(day_start),'to',str(mon_end),'-',str(day_end),'.png'])
 
 #grab the secondary data
 secondary_data_NE = ''.join(['secondary_E_8X4excd_','NE','.npy'])
@@ -134,12 +143,33 @@ save_fn_data_csv_WSW = ''.join([secondary_dir,save_name_data_csv_WSW])
 save_fn_data_csv_WNW = ''.join([secondary_dir,save_name_data_csv_WNW])
 save_fn_data_csv_NW = ''.join([secondary_dir,save_name_data_csv_NW])
 
+dBZ_means_NE_fn = ''.join([secondary_dir, 'dBZ_means_NE.npy'])
+dBZ_means_SW_fn = ''.join([secondary_dir, 'dBZ_means_SW.npy'])
+dBZ_means_WSW_fn = ''.join([secondary_dir, 'dBZ_means_WSW.npy'])
+dBZ_means_WNW_fn = ''.join([secondary_dir, 'dBZ_means_WNW.npy'])
+dBZ_means_NW_fn = ''.join([secondary_dir, 'dBZ_means_NW.npy'])
+
+rhohv_means_NE_fn = ''.join([secondary_dir, 'rhohv_means_NE.npy'])
+rhohv_means_SW_fn = ''.join([secondary_dir, 'rhohv_means_SW.npy'])
+rhohv_means_WSW_fn = ''.join([secondary_dir, 'rhohv_means_WSW.npy'])
+rhohv_means_WNW_fn = ''.join([secondary_dir, 'rhohv_means_WNW.npy'])
+rhohv_means_NW_fn = ''.join([secondary_dir, 'rhohv_means_NW.npy'])
+
+ZDR_means_NE_fn = ''.join([secondary_dir, 'ZDR_means_NE.npy'])
+ZDR_means_SW_fn = ''.join([secondary_dir, 'ZDR_means_SW.npy'])
+ZDR_means_WSW_fn = ''.join([secondary_dir, 'ZDR_means_WSW.npy'])
+ZDR_means_WNW_fn = ''.join([secondary_dir, 'ZDR_means_WNW.npy'])
+ZDR_means_NW_fn = ''.join([secondary_dir, 'ZDR_means_NW.npy'])
+
 save_fn_fig = ''.join([secondary_dir,save_name_fig])
 save_fn_dist_fig = ''.join([secondary_dir,save_name_dist_fig])
+save_fn_polars_fig = ''.join([secondary_dir,save_name_polars_fig])
 
 #bright_bands_east = np.load(bb_fn_east)#time,bbfound, top, btm, bbcrit1, bbcrit2
 #bright_bands_west = np.load(bb_fn_west)
-NPOL_data = np.load(sounding_fn)
+NPOL_data_zero = np.load(sounding_fn_zero)
+NPOL_data_ten = np.load(sounding_fn_ten)
+NPOL_data_fifteen = np.load(sounding_fn_fifteen)
 df=pd.read_csv(NARR_fn, sep=',',header=None)
 NARR_data = np.array(df) #NARR Time,IVT,Melting Level (m),925speed (kt),925dir,Nd,Nm
 
@@ -161,6 +191,24 @@ secondary_vals_WSW = np.load(secondary_vals_fn_WSW)
 secondary_vals_WNW = np.load(secondary_vals_fn_WNW)
 secondary_vals_NW = np.load(secondary_vals_fn_NW)
 
+dBZ_means_NE = np.load(dBZ_means_NE_fn)
+dBZ_means_SW = np.load(dBZ_means_SW_fn)
+dBZ_means_WSW = np.load(dBZ_means_WSW_fn)
+dBZ_means_WNW = np.load(dBZ_means_WNW_fn)
+dBZ_means_NW = np.load(dBZ_means_NW_fn)
+
+rhohv_means_NE = np.load(rhohv_means_NE_fn)
+rhohv_means_SW = np.load(rhohv_means_SW_fn)
+rhohv_means_WSW = np.load(rhohv_means_WSW_fn)
+rhohv_means_WNW = np.load(rhohv_means_WNW_fn)
+rhohv_means_NW = np.load(rhohv_means_NW_fn)
+
+ZDR_means_NE = np.load(ZDR_means_NE_fn)
+ZDR_means_SW = np.load(ZDR_means_SW_fn)
+ZDR_means_WSW = np.load(ZDR_means_WSW_fn)
+ZDR_means_WNW = np.load(ZDR_means_WNW_fn)
+ZDR_means_NW = np.load(ZDR_means_NW_fn)
+
 #n_bbs_east = bright_bands_east.shape[0]
 #n_bbs_west = bright_bands_west.shape[0]
 n_bbs_NE = bright_bands_NE.shape[0]
@@ -170,7 +218,7 @@ n_bbs_WNW = bright_bands_WNW.shape[0]
 n_bbs_NW = bright_bands_NW.shape[0]
 
 n_NARRs = NARR_data.shape[0]
-n_NPOLs = NPOL_data.shape[0]
+n_NPOLs = NPOL_data_zero.shape[0]
 
 n_secondary_NE = secondary_NE.shape[0]
 n_secondary_SW = secondary_SW.shape[0]
@@ -370,10 +418,10 @@ for s in range(0,len(sectors)):
     NARR_melt_levs = np.copy(BrightBands_w_NARR) #place holder for data just to build array, will be replaced later
     NPOL_melt_levs = np.copy(BrightBands_w_NARR) #place holder for data just to build array, will be replaced later
 
-    #array structure = NPOL date, BB top found in algorithm, NARR date, melting layer
-    BrightBands_w_NARR = np.hstack((BrightBands_w_NARR,NARR_melt_levs,NPOL_melt_levs,secondary_levs))
+    #array structure = NPOL date, BB top found in algorithm, NARR date, NARR melting layer, NPOL date, NPOL 0C, Date-Secondary, Secondary Upper, Secondary Lower, NPOL 10 C, NPOL 15C
+    BrightBands_w_NARR = np.hstack((BrightBands_w_NARR,NARR_melt_levs,NPOL_melt_levs,secondary_levs,NPOL_melt_levs))
 
-    BrightBands_w_NARR[:,[3,5]] = float('NaN') #empty slot for NARR and NPOL values
+    BrightBands_w_NARR[:,[3,5,9,10]] = float('NaN') #empty slot for NARR and NPOL values
 
     items = []
     for h in range(0,n_NARRs-1):
@@ -381,7 +429,7 @@ for s in range(0,len(sectors)):
 
     items_NPOL = []
     for h in range(0,n_NPOLs-1):
-        items_NPOL.append(datetime.datetime.strptime(NPOL_data[h+1,0], "%m/%d/%y %H:%M:%S:"))
+        items_NPOL.append(datetime.datetime.strptime(NPOL_data_zero[h+1,0], "%m/%d/%y %H:%M:%S:"))
 
 
     BrightBands_w_NARR = BrightBands_w_NARR[1:BrightBands_w_NARR.shape[0],:] #remove first row of non-data, index values
@@ -417,10 +465,12 @@ for s in range(0,len(sectors)):
         for j in range(0,len(items_NPOL)):
             timedeltas.append(np.abs(pivot-items_NPOL[j]))
         min_index = timedeltas.index(np.min(timedeltas)) + 1
-        d2 = datetime.datetime.strptime(NPOL_data[min_index,0], '%m/%d/%y %H:%M:%S:').strftime('%m/%d/%y %H:%M:%S')
-        melt_layer2 = NPOL_data[min_index,1]
+        d2 = datetime.datetime.strptime(NPOL_data_zero[min_index,0], '%m/%d/%y %H:%M:%S:').strftime('%m/%d/%y %H:%M:%S')
+        melt_layer2 = NPOL_data_zero[min_index,1]
         BrightBands_w_NARR[i,4] = d2
-        BrightBands_w_NARR[i,5] = float(NPOL_data[min_index,1])/1000 #assign the NPOL melting layer to my array
+        BrightBands_w_NARR[i,5] = float(NPOL_data_zero[min_index,1])/1000 #assign the NPOL melting layer to my array
+        BrightBands_w_NARR[i,9] = float(NPOL_data_ten[min_index,1])/1000 #assign the NPOL 10 C layer to my array
+        BrightBands_w_NARR[i,10] = float(NPOL_data_fifteen[min_index,1])/1000 #assign the NPOL 15 C layer to my array
 
         secondary_datetime_object = datetime.datetime.strptime(BrightBands_w_NARR[i,6], "%m/%d/%y %H:%M:%S")
         if secondary_datetime_object != datetime_object:
@@ -452,6 +502,7 @@ for s in range(0,len(sectors)):
     #how big is the plotting window-used for adjusting labeling
     delta = end_date - start_date
 
+
     """
     FIND BEGINNING AND ENDING TIMES FOR REFLECTIVITY VALUES ARRAYS TO GRAB CORRECT VALUES LATER IN PLOTTING HISTOGRAM
     """
@@ -466,10 +517,10 @@ for s in range(0,len(sectors)):
             secondary_vals[i,1] = secondary_vals[i,2]
             secondary_vals[i,2] = temp
         if not start_index_found:
-            if int(month) == mon_start and int(day) == day_start: #grabs the first one it comes across
+            if int(month) == mon_start and int(day) == day_start: #already sorted, grabs the first one it comes across
                 start_index_found = True
                 start_index_vals = i
-        if int(month) == mon_end and int(day) == day_end: #grabs the first one it comes across
+        if int(month) == mon_end and int(day) == day_end:
             end_list.append(i)
     end_index_vals = max(end_list)
 
@@ -496,7 +547,6 @@ for s in range(0,len(sectors)):
             count_unique_enh_times_bb += 1
 
     secondary_vals = secondary_vals[:,1]
-
 
 
     """
@@ -619,6 +669,9 @@ lower_limit_NW = np.array(BrightBands_w_NARR_NW[:,7], dtype = float)
 upper_limit_NE = np.array(BrightBands_w_NARR_NE[:,8], dtype = float)
 lower_limit_NE = np.array(BrightBands_w_NARR_NE[:,7], dtype = float)
 
+
+
+
 """
 PLOT TIME SERIES
 """
@@ -662,89 +715,98 @@ else:
     ax_big = fig.add_subplot(111, frameon = False)
     ax_big.axis('off')
 
-if plot_BB:
+if plot_Citation: ##PLOT A BACKGROUND HIGHLIGHT OF TIMES THAT THE CITATION FLEW
+    for i in range(0,len(flight_starts)):
+        if flight_starts[i] >= start_date and flight_ends[i] <= end_date:
+            x1 = dates.date2num(flight_starts[i])
+            x2 = dates.date2num(flight_ends[i])
+            if nrows == 1:
+                ax.axvspan(x1, x2, alpha=0.4, color='lightgrey', zorder = 1)
+            else:
+                for row in range(nrows):
+                    ax[row].axvspan(x1, x2, alpha=0.4, color='lightgrey', zorder = 1)
+        elif flight_starts[i] < start_date and flight_ends[i] >= start_date and flight_ends[i] <= end_date:
+            x1 = dates.date2num(start_date)
+            x2 = dates.date2num(flight_ends[i])
+            if nrows == 1:
+                ax.axvspan(x1, x2, alpha=0.4, color='lightgrey', zorder = 1)
+            else:
+                for row in range(nrows):
+                    ax[row].axvspan(x1, x2, alpha=0.4, color='lightgrey', zorder = 1)
+        elif flight_starts[i] >= start_date and flight_starts[i] <= end_date and flight_ends[i] > end_date:
+            x1 = dates.date2num(flight_starts[i])
+            x2 = dates.date2num(end_date)
+            if nrows == 1:
+                ax.axvspan(x1, x2, alpha=0.4, color='lightgrey', zorder = 1)
+            else:
+                for row in range(nrows):
+                    ax[row].axvspan(x1, x2, alpha=0.4, color='lightgrey', zorder = 1)
+
+if plot_BB: ##PLOT THE BRIGHT BAND HEIGHT AS IDENTIFIED IN brightband.py
     for row in range(nrows):
         if plot_list[row] == 'NE':
             if nrows == 1:
-                ax.plot(xdatesBB_NE,BrightBands_w_NARR_NE[:,1], label = 'NPOL Radar Bright Band - NE', color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                ax.plot(xdatesBB_NE,BrightBands_w_NARR_NE[:,1], label = 'NPOL Radar Bright Band - NE', color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
             else:
-                ax[row].plot(xdatesBB_NE,BrightBands_w_NARR_NE[:,1], label = 'NPOL Radar Bright Band - NE', color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                ax[row].plot(xdatesBB_NE,BrightBands_w_NARR_NE[:,1], label = 'NPOL Radar Bright Band - NE', color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
             for d in range(1,len(xdatesBB_NE)-1):
                 if np.isnan(float(BrightBands_w_NARR_NE[d-1,1])) and np.isnan(float(BrightBands_w_NARR_NE[d+1,1])) and ~np.isnan(float(BrightBands_w_NARR_NE[d,1])):
                     dt = datetime.datetime.strptime(BrightBands_w_NARR_NE[d,0], '%m/%d/%y %H:%M:%S')
                     d1 = dates.date2num([dt-timedelta(minutes = 5)])
                     d2 = dates.date2num([dt+timedelta(minutes = 5)])
                     if nrows == 1:
-                        ax.plot([d1,d2],[float(BrightBands_w_NARR_NE[d,1]), float(BrightBands_w_NARR_NE[d,1])], color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                        ax.plot([d1,d2],[float(BrightBands_w_NARR_NE[d,1]), float(BrightBands_w_NARR_NE[d,1])], color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
                     else:
-                        ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NE[d,1]), float(BrightBands_w_NARR_NE[d,1])], color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                        ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NE[d,1]), float(BrightBands_w_NARR_NE[d,1])], color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
         elif plot_list[row] == 'SW':
-            ax[row].plot(xdatesBB_SW,BrightBands_w_NARR_SW[:,1], label = 'NPOL Radar Bright Band - SW', color = 'dimgray',linestyle = '-', linewidth = 2.0)
+            ax[row].plot(xdatesBB_SW,BrightBands_w_NARR_SW[:,1], label = 'NPOL Radar Bright Band - SW', color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
             for d in range(1,len(xdatesBB_SW)-1):
                 if np.isnan(float(BrightBands_w_NARR_SW[d-1,1])) and np.isnan(float(BrightBands_w_NARR_SW[d+1,1])) and ~np.isnan(float(BrightBands_w_NARR_SW[d,1])):
                     dt = datetime.datetime.strptime(BrightBands_w_NARR_SW[d,0], '%m/%d/%y %H:%M:%S')
                     d1 = dates.date2num([dt-timedelta(minutes = 5)])
                     d2 = dates.date2num([dt+timedelta(minutes = 5)])
                     if nrows == 1:
-                        ax.plot([d1,d2],[float(BrightBands_w_NARR_SW[d,1]), float(BrightBands_w_NARR_SW[d,1])], color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                        ax.plot([d1,d2],[float(BrightBands_w_NARR_SW[d,1]), float(BrightBands_w_NARR_SW[d,1])], color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
                     else:
-                        ax[row].plot([d1,d2],[float(BrightBands_w_NARR_SW[d,1]), float(BrightBands_w_NARR_SW[d,1])], color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                        ax[row].plot([d1,d2],[float(BrightBands_w_NARR_SW[d,1]), float(BrightBands_w_NARR_SW[d,1])], color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
         elif plot_list[row] == 'WSW':
-            ax[row].plot(xdatesBB_WSW,BrightBands_w_NARR_WSW[:,1], label = 'NPOL Radar Bright Band - WSW', color = 'dimgray',linestyle = '-', linewidth = 2.0)
+            ax[row].plot(xdatesBB_WSW,BrightBands_w_NARR_WSW[:,1], label = 'NPOL Radar Bright Band - WSW', color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
             for d in range(1,len(xdatesBB_WSW)-1):
                 if np.isnan(float(BrightBands_w_NARR_WSW[d-1,1])) and np.isnan(float(BrightBands_w_NARR_WSW[d+1,1])) and ~np.isnan(float(BrightBands_w_NARR_WSW[d,1])):
                     dt = datetime.datetime.strptime(BrightBands_w_NARR_WSW[d,0], '%m/%d/%y %H:%M:%S')
                     d1 = dates.date2num([dt-timedelta(minutes = 5)])
                     d2 = dates.date2num([dt+timedelta(minutes = 5)])
                     if nrows == 1:
-                        ax.plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,1]), float(BrightBands_w_NARR_WSW[d,1])], color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                        ax.plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,1]), float(BrightBands_w_NARR_WSW[d,1])], color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
                     else:
-                        ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,1]), float(BrightBands_w_NARR_WSW[d,1])], color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                        ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,1]), float(BrightBands_w_NARR_WSW[d,1])], color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
         elif plot_list[row] == 'WNW':
-            ax[row].plot(xdatesBB_WNW,BrightBands_w_NARR_WNW[:,1], label = 'NPOL Radar Bright Band - WNW', color = 'dimgray',linestyle = '-', linewidth = 2.0)
+            ax[row].plot(xdatesBB_WNW,BrightBands_w_NARR_WNW[:,1], label = 'NPOL Radar Bright Band - WNW', color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
             for d in range(1,len(xdatesBB_WNW)-1):
                 if np.isnan(float(BrightBands_w_NARR_WNW[d-1,1])) and np.isnan(float(BrightBands_w_NARR_WNW[d+1,1])) and ~np.isnan(float(BrightBands_w_NARR_WNW[d,1])):
                     dt = datetime.datetime.strptime(BrightBands_w_NARR_WNW[d,0], '%m/%d/%y %H:%M:%S')
                     d1 = dates.date2num([dt-timedelta(minutes = 5)])
                     d2 = dates.date2num([dt+timedelta(minutes = 5)])
                     if nrows == 1:
-                        ax.plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,1]), float(BrightBands_w_NARR_WNW[d,1])], color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                        ax.plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,1]), float(BrightBands_w_NARR_WNW[d,1])], color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
                     else:
-                        ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,1]), float(BrightBands_w_NARR_WNW[d,1])], color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                        ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,1]), float(BrightBands_w_NARR_WNW[d,1])], color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
         elif plot_list[row] == 'NW':
-            ax[row].plot(xdatesBB_NW,BrightBands_w_NARR_NW[:,1], label = 'NPOL Radar Bright Band - NW', color = 'dimgray',linestyle = '-', linewidth = 2.0)
+            ax[row].plot(xdatesBB_NW,BrightBands_w_NARR_NW[:,1], label = 'NPOL Radar Bright Band - NW', color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
             for d in range(1,len(xdatesBB_NW)-1):
                 if np.isnan(float(BrightBands_w_NARR_NW[d-1,1])) and np.isnan(float(BrightBands_w_NARR_NW[d+1,1])) and ~np.isnan(float(BrightBands_w_NARR_NW[d,1])):
                     dt = datetime.datetime.strptime(BrightBands_w_NARR_NW[d,0], '%m/%d/%y %H:%M:%S')
                     d1 = dates.date2num([dt-timedelta(minutes = 5)])
                     d2 = dates.date2num([dt+timedelta(minutes = 5)])
                     if nrows == 1:
-                        ax.plot([d1,d2],[float(BrightBands_w_NARR_NW[d,1]), float(BrightBands_w_NARR_NW[d,1])], color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                        ax.plot([d1,d2],[float(BrightBands_w_NARR_NW[d,1]), float(BrightBands_w_NARR_NW[d,1])], color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
                     else:
-                        ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NW[d,1]), float(BrightBands_w_NARR_NW[d,1])], color = 'dimgray',linestyle = '-', linewidth = 2.0)
+                        ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NW[d,1]), float(BrightBands_w_NARR_NW[d,1])], color = 'black',linestyle = '-', linewidth = 1.0, zorder = 2)
 
     custom_lines.append(Line2D([0], [0], color='dimgray', linestyle='-', linewidth = 2.0))
     custom_labels.append('NPOL Radar Bright Band')
 
-if plot_NARR:
-    if nrows == 1:
-        ax.scatter(xdatesNARR_SW,BrightBands_w_NARR_SW[:,3], label = 'NARR Melt Level', color = '#e66101',marker = 'o', s = 6, alpha = 0.6)
-    else:
-        for row in range(nrows):
-            ax[row].scatter(xdatesNARR_SW,BrightBands_w_NARR_SW[:,3], label = 'NARR Melt Level', color = '#e66101',marker = 'o', s = 6, alpha = 0.6)
-    custom_lines.append(Line2D([0], [0], marker = 'o',color = 'w', markerfacecolor = '#e66101', markersize = 6))
-    custom_labels.append('NARR Melt Level')
-
-if plot_NPOL_0C:
-    if nrows == 1:
-        ax.scatter(xdatesNPOL_SW,BrightBands_w_NARR_SW[:,5], label = 'NPOL Sounding 0'+ '\u00b0'+ 'C',color = "mediumblue",marker = '^', s = 6, alpha = 0.6)
-    else:
-        for row in range(nrows):
-            ax[row].scatter(xdatesNPOL_SW,BrightBands_w_NARR_SW[:,5], label = 'NPOL Sounding 0'+ '\u00b0'+ 'C',color = "mediumblue",marker = '^', s = 6, alpha = 0.6)
-    custom_lines.append(Line2D([0], [0], marker = '^', color = 'w' , markerfacecolor = 'mediumblue', markersize = 6))
-    custom_labels.append('NPOL Sounding 0'+ '\u00b0'+ 'C')
-
-if plot_Secondary:
+if plot_Secondary: ##PLOT THE SECONDARY ENHANCEMENT
     n = 0
     plot_colors = []
     plot_colors_dark = []
@@ -777,12 +839,12 @@ if plot_Secondary:
                 d2 = dates.date2num([dt+timedelta(minutes = 5)])[0]
                 if nrows == 1:
                     ax.fill_between(np.array([d1,d2]), float(BrightBands_w_NARR_NE[d,7]), float(BrightBands_w_NARR_NE[d,8]), facecolor=sector_colors[i_s[0]+1], edgecolor = sector_colors[i_s[0]+1], alpha=0.6)
-                    ax.plot([d1,d2],[float(BrightBands_w_NARR_NE[d,7]), float(BrightBands_w_NARR_NE[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
-                    ax.plot([d1,d2],[float(BrightBands_w_NARR_NE[d,8]), float(BrightBands_w_NARR_NE[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
+                    ax.plot([d1,d2],[float(BrightBands_w_NARR_NE[d,7]), float(BrightBands_w_NARR_NE[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
+                    ax.plot([d1,d2],[float(BrightBands_w_NARR_NE[d,8]), float(BrightBands_w_NARR_NE[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
                 else:
                     ax[row].fill_between(np.array([d1,d2]), float(BrightBands_w_NARR_NE[d,7]), float(BrightBands_w_NARR_NE[d,8]), facecolor=sector_colors[i_s[0]+1], edgecolor = sector_colors[i_s[0]+1], alpha=0.6)
-                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NE[d,7]), float(BrightBands_w_NARR_NE[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
-                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NE[d,8]), float(BrightBands_w_NARR_NE[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
+                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NE[d,7]), float(BrightBands_w_NARR_NE[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
+                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NE[d,8]), float(BrightBands_w_NARR_NE[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
 
     if 'NW' in plot_list:
         row = [i for i in range(nrows) if plot_list[i] == 'NW'][0]
@@ -810,12 +872,12 @@ if plot_Secondary:
                 d2 = dates.date2num([dt+timedelta(minutes = 5)])[0]
                 if nrows == 1:
                     ax.fill_between(np.array([d1,d2]), float(BrightBands_w_NARR_NW[d,7]), float(BrightBands_w_NARR_NW[d,8]), facecolor=sector_colors[i_s[0]+1], edgecolor = sector_colors[i_s[0]+1], alpha=0.6)
-                    ax.plot([d1,d2],[float(BrightBands_w_NARR_NW[d,7]), float(BrightBands_w_NARR_NW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
-                    ax.plot([d1,d2],[float(BrightBands_w_NARR_NW[d,8]), float(BrightBands_w_NARR_NW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
+                    ax.plot([d1,d2],[float(BrightBands_w_NARR_NW[d,7]), float(BrightBands_w_NARR_NW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
+                    ax.plot([d1,d2],[float(BrightBands_w_NARR_NW[d,8]), float(BrightBands_w_NARR_NW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
                 else:
                     ax[row].fill_between(np.array([d1,d2]), float(BrightBands_w_NARR_NW[d,7]), float(BrightBands_w_NARR_NW[d,8]), facecolor=sector_colors[i_s[0]+1], edgecolor = sector_colors[i_s[0]+1], alpha=0.6)
-                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NW[d,7]), float(BrightBands_w_NARR_NW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
-                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NW[d,8]), float(BrightBands_w_NARR_NW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
+                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NW[d,7]), float(BrightBands_w_NARR_NW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
+                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_NW[d,8]), float(BrightBands_w_NARR_NW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
     if 'WNW' in plot_list:
         row = [i for i in range(nrows) if plot_list[i] == 'WNW'][0]
         #print("WNW", row)
@@ -842,12 +904,12 @@ if plot_Secondary:
                 d2 = dates.date2num([dt+timedelta(minutes = 5)])[0]
                 if nrows == 1:
                     ax.fill_between(np.array([d1,d2]), float(BrightBands_w_NARR_WNW[d,7]), float(BrightBands_w_NARR_WNW[d,8]), facecolor=sector_colors[i_s[0]+1], edgecolor = sector_colors[i_s[0]+1], alpha=0.6)
-                    ax.plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,7]), float(BrightBands_w_NARR_WNW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
-                    ax.plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,8]), float(BrightBands_w_NARR_WNW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
+                    ax.plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,7]), float(BrightBands_w_NARR_WNW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
+                    ax.plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,8]), float(BrightBands_w_NARR_WNW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
                 else:
                     ax[row].fill_between(np.array([d1,d2]), float(BrightBands_w_NARR_WNW[d,7]), float(BrightBands_w_NARR_WNW[d,8]), facecolor=sector_colors[i_s[0]+1], edgecolor = sector_colors[i_s[0]+1], alpha=0.6)
-                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,7]), float(BrightBands_w_NARR_WNW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
-                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,8]), float(BrightBands_w_NARR_WNW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
+                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,7]), float(BrightBands_w_NARR_WNW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
+                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WNW[d,8]), float(BrightBands_w_NARR_WNW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
 
     if 'WSW' in plot_list:
         row = [i for i in range(nrows) if plot_list[i] == 'WSW'][0]
@@ -876,12 +938,12 @@ if plot_Secondary:
                 d2 = dates.date2num([dt+timedelta(minutes = 5)])[0]
                 if nrows == 1:
                     ax.fill_between(np.array([d1,d2]), float(BrightBands_w_NARR_WSW[d,7]), float(BrightBands_w_NARR_WSW[d,8]), facecolor=sector_colors[i_s[0]+1], edgecolor = sector_colors[i_s[0]+1], alpha=0.6)
-                    ax.plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,7]), float(BrightBands_w_NARR_WSW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
-                    ax.plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,8]), float(BrightBands_w_NARR_WSW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
+                    ax.plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,7]), float(BrightBands_w_NARR_WSW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
+                    ax.plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,8]), float(BrightBands_w_NARR_WSW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
                 else:
                     ax[row].fill_between(np.array([d1,d2]), float(BrightBands_w_NARR_WSW[d,7]), float(BrightBands_w_NARR_WSW[d,8]), facecolor=sector_colors[i_s[0]+1], edgecolor = sector_colors[i_s[0]+1], alpha=0.6)
-                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,7]), float(BrightBands_w_NARR_WSW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
-                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,8]), float(BrightBands_w_NARR_WSW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
+                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,7]), float(BrightBands_w_NARR_WSW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
+                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_WSW[d,8]), float(BrightBands_w_NARR_WSW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
 
     if 'SW' in plot_list:
         row = [i for i in range(nrows) if plot_list[i] == 'SW'][0]
@@ -910,61 +972,70 @@ if plot_Secondary:
                 d2 = dates.date2num([dt+timedelta(minutes = 5)])[0]
                 if nrows == 1:
                     ax.fill_between(np.array([d1,d2]), float(BrightBands_w_NARR_SW[d,7]), float(BrightBands_w_NARR_SW[d,8]), facecolor=sector_colors[i_s[0]+1], edgecolor = sector_colors[i_s[0]+1], alpha=0.6)
-                    ax.plot([d1,d2],[float(BrightBands_w_NARR_SW[d,7]), float(BrightBands_w_NARR_SW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
-                    ax.plot([d1,d2],[float(BrightBands_w_NARR_SW[d,8]), float(BrightBands_w_NARR_SW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
+                    ax.plot([d1,d2],[float(BrightBands_w_NARR_SW[d,7]), float(BrightBands_w_NARR_SW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
+                    ax.plot([d1,d2],[float(BrightBands_w_NARR_SW[d,8]), float(BrightBands_w_NARR_SW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
                 else:
                     ax[row].fill_between(np.array([d1,d2]), float(BrightBands_w_NARR_SW[d,7]), float(BrightBands_w_NARR_SW[d,8]), facecolor=sector_colors[i_s[0]+1], edgecolor = sector_colors[i_s[0]+1], alpha=0.6)
-                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_SW[d,7]), float(BrightBands_w_NARR_SW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
-                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_SW[d,8]), float(BrightBands_w_NARR_SW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0)
+                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_SW[d,7]), float(BrightBands_w_NARR_SW[d,7])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
+                    ax[row].plot([d1,d2],[float(BrightBands_w_NARR_SW[d,8]), float(BrightBands_w_NARR_SW[d,8])], color = sector_colors_dark[i_s[0]], linestyle = '-', linewidth = 1.0, zorder = 2)
 
 
     if nrows == 1:
         ax.fill_between(xdatesSecondary, upper_limit,lower_limit, facecolor=plot_colors[0], edgecolor = plot_colors[0], alpha=0.6)
-        ax.plot(xdatesSecondary,lower_limit, color = plot_colors_dark[0], linestyle = '-', linewidth = 1.0)
-        ax.plot(xdatesSecondary,upper_limit, color = plot_colors_dark[0],linestyle = '-', linewidth = 1.0)
+        ax.plot(xdatesSecondary,lower_limit, color = plot_colors_dark[0], linestyle = '-', linewidth = 1.0, zorder = 2)
+        ax.plot(xdatesSecondary,upper_limit, color = plot_colors_dark[0],linestyle = '-', linewidth = 1.0, zorder = 2)
         #ax.text(0.99, 0.93, str(plot_names[0]), verticalalignment='top', horizontalalignment='right',transform=ax.transAxes, color='black', fontsize=8,bbox=dict(facecolor='white', edgecolor='none', boxstyle='round'))
         ax.set_xlim([min_x, max_x])
         custom_lines.append(Line2D([0], [0], color=plot_colors[0], linestyle='-', linewidth = 2.0))
         custom_labels.append(''.join(['Secondary Enhancement']))
     else:
         for r in range(0,nrows):
-            ax[r].fill_between(xdatesSecondary[r], upper_limit[r],lower_limit[r], facecolor=plot_colors[r], edgecolor = plot_colors[r], alpha=0.6)
-            ax[r].plot(xdatesSecondary[r],lower_limit[r], color = plot_colors_dark[r], linestyle = '-', linewidth = 1.0)
-            ax[r].plot(xdatesSecondary[r],upper_limit[r], color = plot_colors_dark[r],linestyle = '-', linewidth = 1.0)
+            ax[r].fill_between(xdatesSecondary[r], upper_limit[r],lower_limit[r], facecolor=plot_colors[r], edgecolor = plot_colors[r], alpha=0.6, zorder = 2)
+            ax[r].plot(xdatesSecondary[r],lower_limit[r], color = plot_colors_dark[r], linestyle = '-', linewidth = 1.0, zorder = 2)
+            ax[r].plot(xdatesSecondary[r],upper_limit[r], color = plot_colors_dark[r],linestyle = '-', linewidth = 1.0, zorder = 2)
             ax[r].text(0.99, 0.93, str(plot_names[r]), verticalalignment='top', horizontalalignment='right',transform=ax[r].transAxes, color='black', fontsize=8,bbox=dict(facecolor='white', edgecolor='none', boxstyle='round'))
             ax[r].set_xlim([min_x, max_x])
             custom_lines.append(Line2D([0], [0], color=plot_colors[r], linestyle='-', linewidth = 2.0))
             custom_labels.append(''.join(['Secondary Enhancement - ', str(plot_abr[r])]))
 
-if plot_Citation:
-    for i in range(0,len(flight_starts)):
-        if flight_starts[i] >= start_date and flight_ends[i] <= end_date:
-            x1 = dates.date2num(flight_starts[i])
-            x2 = dates.date2num(flight_ends[i])
-            if nrows == 1:
-                ax.axvspan(x1, x2, alpha=0.4, color='lightgrey')
-            else:
-                for row in range(nrows):
-                    ax[row].axvspan(x1, x2, alpha=0.4, color='lightgrey')
-        elif flight_starts[i] < start_date and flight_ends[i] >= start_date and flight_ends[i] <= end_date:
-            x1 = dates.date2num(start_date)
-            x2 = dates.date2num(flight_ends[i])
-            if nrows == 1:
-                ax.axvspan(x1, x2, alpha=0.4, color='lightgrey')
-            else:
-                for row in range(nrows):
-                    ax[row].axvspan(x1, x2, alpha=0.4, color='lightgrey')
-        elif flight_starts[i] >= start_date and flight_starts[i] <= end_date and flight_ends[i] > end_date:
-            x1 = dates.date2num(flight_starts[i])
-            x2 = dates.date2num(end_date)
-            if nrows == 1:
-                ax.axvspan(x1, x2, alpha=0.4, color='lightgrey')
-            else:
-                for row in range(nrows):
-                    ax[row].axvspan(x1, x2, alpha=0.4, color='lightgrey')
+if plot_NARR: ##PLOT 3 HOUR NARR MELTING LEVEL HEIGHTS
+    if nrows == 1:
+        ax.scatter(xdatesNARR_SW,BrightBands_w_NARR_SW[:,3], label = 'NARR Melt Level', color = '#e66101',marker = 'o', s = 6, alpha = 0.9, zorder = 2)
+    else:
+        for row in range(nrows):
+            ax[row].scatter(xdatesNARR_SW,BrightBands_w_NARR_SW[:,3], label = 'NARR Melt Level', color = '#e66101',marker = 'o', s = 6, alpha = 0.9, zorder = 2)
+    custom_lines.append(Line2D([0], [0], marker = 'o',color = 'w', markerfacecolor = '#e66101', markersize = 6))
+    custom_labels.append('NARR Melt Level')
+
+if plot_NPOL_0C: ##PLOT THE SOUNDING IDENTIFIED 0°C ELEVATION
+    if nrows == 1:
+        ax.scatter(xdatesNPOL_SW,BrightBands_w_NARR_SW[:,5], label = 'NPOL Sounding 0'+ '\u00b0'+ 'C',color = "black",marker = '^', edgecolor = 'dimgray', linewidth=0.5, s = 6, alpha = 0.9, zorder = 2)
+    else:
+        for row in range(nrows):
+            ax[row].scatter(xdatesNPOL_SW,BrightBands_w_NARR_SW[:,5], label = 'NPOL Sounding 0'+ '\u00b0'+ 'C',color = "black",marker = '^', edgecolor = 'dimgray', linewidth=0.5, s = 6, alpha = 0.9, zorder = 2)
+    custom_lines.append(Line2D([0], [0], marker = '^', color = 'w' , markerfacecolor = 'black', markeredgecolor = 'dimgray', markersize = 6))
+    custom_labels.append('NPOL Sounding 0'+ '\u00b0'+ 'C')
+
+if plot_NPOL_10C: ##PLOT THE SOUNDING IDENTIFIED 10°C ELEVATION
+    if nrows == 1:
+        ax.scatter(xdatesNPOL_SW,BrightBands_w_NARR_SW[:,9], label = 'NPOL Sounding -10'+ '\u00b0'+ 'C',color = "black",marker = 's', edgecolor = 'dimgray', linewidth=0.5, s = 6, alpha = 0.9, zorder = 2)
+    else:
+        for row in range(nrows):
+            ax[row].scatter(xdatesNPOL_SW,BrightBands_w_NARR_SW[:,9], label = 'NPOL Sounding -10'+ '\u00b0'+ 'C',color = "black",marker = 's', edgecolor = 'dimgray', linewidth=0.5, s = 6, alpha = 0.9, zorder = 2)
+    custom_lines.append(Line2D([0], [0], marker = 's', color = 'w' , markerfacecolor = 'black', markeredgecolor = 'dimgray', markersize = 6))
+    custom_labels.append('NPOL Sounding -10'+ '\u00b0'+ 'C')
+
+if plot_NPOL_15C: ##PLOT THE SOUNDING IDENTIFIED 15°C ELEVATION
+    if nrows == 1:
+        ax.scatter(xdatesNPOL_SW,BrightBands_w_NARR_SW[:,10], label = 'NPOL Sounding -15'+ '\u00b0'+ 'C',color = "black", marker = 'D', edgecolor = 'dimgray', linewidth=0.5, s = 6, alpha = 0.9, zorder = 2)
+    else:
+        for row in range(nrows):
+            ax[row].scatter(xdatesNPOL_SW,BrightBands_w_NARR_SW[:,10], label = 'NPOL Sounding -15'+ '\u00b0'+ 'C',color = "black",marker = 'D', edgecolor = 'dimgray', linewidth=0.5, s = 6, alpha = 0.9, zorder = 2)
+    custom_lines.append(Line2D([0], [0], marker = 'D', color = 'w' , markerfacecolor = 'black', markeredgecolor = 'dimgray',  markersize = 6))
+    custom_labels.append('NPOL Sounding -15'+ '\u00b0'+ 'C')
 
 
-#x_zero = dates.date2num(nov13_zero)
+#x_zero = dates.date2num(nov13_zero)  ##dont use - temporarty for plot for Lynn
 
 x_st = dates.date2num(date_start)
 x_end = dates.date2num(date_end)
@@ -972,6 +1043,7 @@ x_end = dates.date2num(date_end)
 #ax.xticks(xdatesNPOL,BrightBands_w_NARR[:,0])
 date_start_fixed = ''.join([str(day_start),'/',str(mon_start),'/2015 00:00:00'])
 date_start_fixed = datetime.datetime.strptime(date_start_fixed, "%d/%m/%Y %H:%M:%S")
+
 x_zero = []
 for d in range(0,delta.days):
     if d == 0:
@@ -1091,6 +1163,10 @@ plt.savefig(save_fn_fig,bbox_extra_artists=(lgd,ylab), bbox_inches='tight', dpi 
 plt.close()
 
 
+
+
+
+
 """
 PLOT HISTOGRAMS
 """
@@ -1169,3 +1245,431 @@ lgd = ax.legend(bbox_to_anchor=(1.04,0.5), loc="center left", frameon = False, l
 #plt.show()
 plt.savefig(save_fn_dist_fig, bbox_extra_artists=(lgd,), bbox_inches='tight', dpi = 300)
 plt.close()
+
+
+
+
+
+
+if plot_polar_figs:
+    """
+    SET UP PLOT POLARIMETRIC MEANS FIGURES
+    """
+
+    """
+    FIND BEGINNING AND ENDING TIMES FOR MEAN ARRAYS FROM START AND END DATES
+    """
+    start_index_found = False
+    end_list = []
+    for i in range(len(dBZ_means_NE)):
+        datetime_object = datetime.datetime.strptime(dBZ_means_NE[i,0], "%m/%d/%y %H:%M:%S")
+        month = datetime_object.strftime("%m")
+        day = datetime_object.strftime("%d")
+        if not start_index_found:
+            if int(month) == mon_start and int(day) == day_start: #already sorted, grabs the first one it comes across
+                start_index_found = True
+                start_index_means = i
+        if int(month) == mon_end and int(day) == day_end:
+            end_list.append(i)
+    end_index_means = max(end_list)
+
+    """
+    UPDATE THE MEANS ARRAYS TO RESTRICTED WITHIN DATE WINDOW
+    """
+
+    dBZ_means_NE = dBZ_means_NE[start_index_means:end_index_means+1,:]
+    dBZ_means_SW = dBZ_means_SW[start_index_means:end_index_means+1,:]
+    dBZ_means_WSW = dBZ_means_WSW[start_index_means:end_index_means+1,:]
+    dBZ_means_WNW = dBZ_means_WNW[start_index_means:end_index_means+1,:]
+    dBZ_means_NW = dBZ_means_NW[start_index_means:end_index_means+1,:]
+
+    dBZ_means_NE_sec = np.copy(dBZ_means_NE)
+    dBZ_means_SW_sec = np.copy(dBZ_means_SW)
+    dBZ_means_WSW_sec = np.copy(dBZ_means_WSW)
+    dBZ_means_WNW_sec = np.copy(dBZ_means_WNW)
+    dBZ_means_NW_sec = np.copy(dBZ_means_NW)
+
+    rhohv_means_NE = rhohv_means_NE[start_index_means:end_index_means+1,:]
+    rhohv_means_SW = rhohv_means_SW[start_index_means:end_index_means+1,:]
+    rhohv_means_WSW = rhohv_means_WSW[start_index_means:end_index_means+1,:]
+    rhohv_means_WNW = rhohv_means_WNW[start_index_means:end_index_means+1,:]
+    rhohv_means_NW = rhohv_means_NW[start_index_means:end_index_means+1,:]
+
+    rhohv_means_NE_sec = np.copy(rhohv_means_NE)
+    rhohv_means_SW_sec = np.copy(rhohv_means_SW)
+    rhohv_means_WSW_sec = np.copy(rhohv_means_WSW)
+    rhohv_means_WNW_sec = np.copy(rhohv_means_WNW)
+    rhohv_means_NW_sec = np.copy(rhohv_means_NW)
+
+    ZDR_means_NE = ZDR_means_NE[start_index_means:end_index_means+1,:]
+    ZDR_means_SW = ZDR_means_SW[start_index_means:end_index_means+1,:]
+    ZDR_means_WSW = ZDR_means_WSW[start_index_means:end_index_means+1,:]
+    ZDR_means_WNW = ZDR_means_WNW[start_index_means:end_index_means+1,:]
+    ZDR_means_NW = ZDR_means_NW[start_index_means:end_index_means+1,:]
+
+    ZDR_means_NE_sec = np.copy(ZDR_means_NE)
+    ZDR_means_SW_sec = np.copy(ZDR_means_SW)
+    ZDR_means_WSW_sec = np.copy(ZDR_means_WSW)
+    ZDR_means_WNW_sec = np.copy(ZDR_means_WNW)
+    ZDR_means_NW_sec = np.copy(ZDR_means_NW)
+
+    """
+    LOOP BACK THROUGH ARRAYS TO FIND KNOCK OUT PERIODS WITHOUT SECONDARY ENHANCEMENT
+    & FIND NEAREST LEVEL AND SHIFT
+    """
+
+    upper_secondary_NE = []
+    lower_secondary_NE = []
+    upper_secondary_SW = []
+    lower_secondary_SW = []
+    upper_secondary_WSW = []
+    lower_secondary_WSW = []
+    upper_secondary_WNW = []
+    lower_secondary_WNW = []
+    upper_secondary_NW = []
+    lower_secondary_NW = []
+
+    minus_tens = []
+    minus_fifteens = []
+    temps_dates= [] #dates to check temps against for grabbing temps
+
+    for i in range(len(dBZ_means_NE)):
+        datetime_object = datetime.datetime.strptime(dBZ_means_NE[i,0], "%m/%d/%y %H:%M:%S")
+        ind = [a for a in range(len(BrightBands_w_NARR_NE[:,0])) if datetime.datetime.strptime(BrightBands_w_NARR_NE[a,0], "%m/%d/%y %H:%M:%S") == datetime_object][0]
+        if np.isnan(np.float64(BrightBands_w_NARR_NE[ind,7])): #no secondary
+            dBZ_means_NE_sec[ind,1:dBZ_means_NE_sec.shape[1]] = float('NaN')
+            rhohv_means_NE_sec[ind,1:rhohv_means_NE_sec.shape[1]] = float('NaN')
+            ZDR_means_NE_sec[ind,1:ZDR_means_NE_sec.shape[1]] = float('NaN')
+        else: #there is a secondary enhancement, keep the values
+            brightband_ht = np.float64(BrightBands_w_NARR_NE[ind,1])
+            if ~np.isnan(np.float64(brightband_ht)): #there is a bright band at that time
+                brightband_lev = np.int(np.round(np.float64(brightband_ht) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_NE[ind,1])
+            elif ~np.isnan(np.float64(BrightBands_w_NARR_NE[ind-1,1])) and ~np.isnan(np.float64(BrightBands_w_NARR_NE[ind+1,1])): #bright band before and after, average values
+                brightband_lev = np.int(np.round(np.mean([np.float64(BrightBands_w_NARR_NE[ind-1,1]),np.float64(BrightBands_w_NARR_NE[ind+1,1])]) * 2,0))
+                brightband_ht = np.mean([np.float64(BrightBands_w_NARR_NE[ind-1,1]),np.float64(BrightBands_w_NARR_NE[ind+1,1])])
+            elif ~np.isnan(np.float64(BrightBands_w_NARR_NE[ind-1,1])): #only a brigh band before
+                brightband_lev = np.int(np.round(np.float64(BrightBands_w_NARR_NE[ind-1,1]) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_NE[ind-1,1])
+            else: #only a bright band after
+                brightband_lev = np.int(np.round(np.float64(BrightBands_w_NARR_NE[ind+1,1]) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_NE[ind+1,1])
+            #shift the data down to the brightband level
+            dBZ_means_NE_sec[ind,1:dBZ_means_NE_sec.shape[1]] = np.hstack([dBZ_means_NE_sec[ind,brightband_lev+1:dBZ_means_NE_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+            rhohv_means_NE_sec[ind,1:rhohv_means_NE_sec.shape[1]] = np.hstack([rhohv_means_NE_sec[ind,brightband_lev+1:rhohv_means_NE_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+            ZDR_means_NE_sec[ind,1:ZDR_means_NE_sec.shape[1]] = np.hstack([ZDR_means_NE_sec[ind,brightband_lev+1:ZDR_means_NE_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+
+            upper_secondary_NE.append(np.float64(BrightBands_w_NARR_NE[ind,8])-brightband_ht)
+            lower_secondary_NE.append(np.float64(BrightBands_w_NARR_NE[ind,7])-brightband_ht)
+
+            datetime_NPOL = datetime.datetime.strptime(BrightBands_w_NARR_NE[ind,4], "%m/%d/%y %H:%M:%S")
+            temps_dates.append(datetime_NPOL)
+            minus_tens.append(np.float64(BrightBands_w_NARR_NE[ind,9])-brightband_ht)
+            minus_fifteens.append(np.float64(BrightBands_w_NARR_NE[ind,10])-brightband_ht)
+
+
+    for i in range(len(dBZ_means_SW)):
+        datetime_object = datetime.datetime.strptime(dBZ_means_SW[i,0], "%m/%d/%y %H:%M:%S")
+        ind = [i for i in range(len(BrightBands_w_NARR_SW[:,0])) if datetime.datetime.strptime(BrightBands_w_NARR_SW[i,0], "%m/%d/%y %H:%M:%S") == datetime_object][0]
+        if np.isnan(np.float64(BrightBands_w_NARR_SW[ind,7])): #no secondary
+            dBZ_means_SW_sec[ind,1:dBZ_means_SW_sec.shape[1]] = float('NaN')
+            rhohv_means_SW_sec[ind,1:rhohv_means_SW_sec.shape[1]] = float('NaN')
+            ZDR_means_SW_sec[ind,1:ZDR_means_SW_sec.shape[1]] = float('NaN')
+        else: #there is a secondary enhancement, keep the value
+            brightband_ht = np.float64(BrightBands_w_NARR_SW[ind,1])
+            if ~np.isnan(np.float64(brightband_ht)): #there is a bright band at that time
+                brightband_lev = np.int(np.round(np.float64(brightband_ht) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_SW[ind,1])
+            elif ~np.isnan(np.float64(BrightBands_w_NARR_SW[ind-1,1])) and ~np.isnan(np.float64(BrightBands_w_NARR_SW[ind+1,1])): #bright band before and after, average values
+                brightband_lev = np.int(np.round(np.mean([np.float64(BrightBands_w_NARR_SW[ind-1,1]),np.float64(BrightBands_w_NARR_SW[ind+1,1])]) * 2,0))
+                brightband_ht = np.mean([np.float64(BrightBands_w_NARR_SW[ind-1,1]),np.float64(BrightBands_w_NARR_SW[ind+1,1])])
+            elif ~np.isnan(np.float64(BrightBands_w_NARR_SW[ind-1,1])): #only a brigh band before
+                brightband_lev = np.int(np.round(np.float64(BrightBands_w_NARR_SW[ind-1,1]) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_SW[ind-1,1])
+            else: #only a bright band after
+                brightband_lev = np.int(np.round(np.float64(BrightBands_w_NARR_SW[ind+1,1]) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_SW[ind+1,1])
+            #shift the data down to the brightband level
+            dBZ_means_SW_sec[ind,1:dBZ_means_SW_sec.shape[1]] = np.hstack([dBZ_means_SW_sec[ind,brightband_lev+1:dBZ_means_SW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+            rhohv_means_SW_sec[ind,1:rhohv_means_SW_sec.shape[1]] = np.hstack([rhohv_means_SW_sec[ind,brightband_lev+1:rhohv_means_SW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+            ZDR_means_SW_sec[ind,1:ZDR_means_SW_sec.shape[1]] = np.hstack([ZDR_means_SW_sec[ind,brightband_lev+1:ZDR_means_SW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+
+            upper_secondary_SW.append(np.float64(BrightBands_w_NARR_SW[ind,8])-brightband_ht)
+            lower_secondary_SW.append(np.float64(BrightBands_w_NARR_SW[ind,7])-brightband_ht)
+
+            datetime_NPOL = datetime.datetime.strptime(BrightBands_w_NARR_SW[ind,4], "%m/%d/%y %H:%M:%S")
+            temps_dates.append(datetime_NPOL)
+            minus_tens.append(np.float64(BrightBands_w_NARR_SW[ind,9])-brightband_ht)
+            minus_fifteens.append(np.float64(BrightBands_w_NARR_SW[ind,10])-brightband_ht)
+
+    for i in range(len(dBZ_means_WSW)):
+        datetime_object = datetime.datetime.strptime(dBZ_means_WSW[i,0], "%m/%d/%y %H:%M:%S")
+        ind = [i for i in range(len(BrightBands_w_NARR_WSW[:,0])) if datetime.datetime.strptime(BrightBands_w_NARR_WSW[i,0], "%m/%d/%y %H:%M:%S") == datetime_object][0]
+        if np.isnan(np.float64(BrightBands_w_NARR_WSW[ind,7])): #no secondary
+            dBZ_means_WSW_sec[ind,1:dBZ_means_WSW_sec.shape[1]] = float('NaN')
+            rhohv_means_WSW_sec[ind,1:rhohv_means_WSW_sec.shape[1]] = float('NaN')
+            ZDR_means_WSW_sec[ind,1:ZDR_means_WSW_sec.shape[1]] = float('NaN')
+        else: #there is a secondary enhancement, keep the values
+            brightband_ht = np.float64(BrightBands_w_NARR_WSW[ind,1])
+            if ~np.isnan(np.float64(brightband_ht)): #there is a bright band at that time
+                brightband_lev = np.int(np.round(np.float64(brightband_ht) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_WSW[ind,1])
+            elif ~np.isnan(np.float64(BrightBands_w_NARR_WSW[ind-1,1])) and ~np.isnan(np.float64(BrightBands_w_NARR_WSW[ind+1,1])): #bright band before and after, average values
+                brightband_lev = np.int(np.round(np.mean([np.float64(BrightBands_w_NARR_WSW[ind-1,1]),np.float64(BrightBands_w_NARR_WSW[ind+1,1])]) * 2,0))
+                brightband_ht = np.mean([np.float64(BrightBands_w_NARR_WSW[ind-1,1]),np.float64(BrightBands_w_NARR_WSW[ind+1,1])])
+            elif ~np.isnan(np.float64(BrightBands_w_NARR_WSW[ind-1,1])): #only a brigh band before
+                brightband_lev = np.int(np.round(np.float64(BrightBands_w_NARR_WSW[ind-1,1]) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_WSW[ind-1,1])
+            else: #only a bright band after
+                brightband_lev = np.int(np.round(np.float64(BrightBands_w_NARR_WSW[ind+1,1]) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_WSW[ind+1,1])
+            #shift the data down to the brightband level
+            dBZ_means_WSW_sec[ind,1:dBZ_means_WSW_sec.shape[1]] = np.hstack([dBZ_means_WSW_sec[ind,brightband_lev+1:dBZ_means_WSW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+            rhohv_means_WSW_sec[ind,1:rhohv_means_WSW_sec.shape[1]] = np.hstack([rhohv_means_WSW_sec[ind,brightband_lev+1:rhohv_means_WSW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+            ZDR_means_WSW_sec[ind,1:ZDR_means_WSW_sec.shape[1]] = np.hstack([ZDR_means_WSW_sec[ind,brightband_lev+1:ZDR_means_WSW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+
+            upper_secondary_WSW.append(np.float64(BrightBands_w_NARR_WSW[ind,8])-brightband_ht)
+            lower_secondary_WSW.append(np.float64(BrightBands_w_NARR_WSW[ind,7])-brightband_ht)
+
+            datetime_NPOL = datetime.datetime.strptime(BrightBands_w_NARR_WSW[ind,4], "%m/%d/%y %H:%M:%S")
+            temps_dates.append(datetime_NPOL)
+            minus_tens.append(np.float64(BrightBands_w_NARR_WSW[ind,9])-brightband_ht)
+            minus_fifteens.append(np.float64(BrightBands_w_NARR_WSW[ind,10])-brightband_ht)
+
+    for i in range(len(dBZ_means_WNW)):
+        datetime_object = datetime.datetime.strptime(dBZ_means_WNW[i,0], "%m/%d/%y %H:%M:%S")
+        ind = [i for i in range(len(BrightBands_w_NARR_WNW[:,0])) if datetime.datetime.strptime(BrightBands_w_NARR_WNW[i,0], "%m/%d/%y %H:%M:%S") == datetime_object][0]
+        if np.isnan(np.float64(BrightBands_w_NARR_WNW[ind,7])): #no secondary
+            dBZ_means_WNW_sec[ind,1:dBZ_means_WNW_sec.shape[1]] = float('NaN')
+            rhohv_means_WNW_sec[ind,1:rhohv_means_WNW_sec.shape[1]] = float('NaN')
+            ZDR_means_WNW_sec[ind,1:ZDR_means_WNW_sec.shape[1]] = float('NaN')
+        else: #there is a secondary enhancement, keep the values
+            brightband_ht = np.float64(BrightBands_w_NARR_WNW[ind,1])
+            if ~np.isnan(np.float64(brightband_ht)): #there is a bright band at that time
+                brightband_lev = np.int(np.round(np.float64(brightband_ht) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_WNW[ind,1])
+            elif ~np.isnan(np.float64(BrightBands_w_NARR_WNW[ind-1,1])) and ~np.isnan(np.float64(BrightBands_w_NARR_WNW[ind+1,1])): #bright band before and after, average values
+                brightband_lev = np.int(np.round(np.mean([np.float64(BrightBands_w_NARR_WNW[ind-1,1]),np.float64(BrightBands_w_NARR_WNW[ind+1,1])]) * 2,0))
+                brightband_ht = np.mean([np.float64(BrightBands_w_NARR_WNW[ind-1,1]),np.float64(BrightBands_w_NARR_WNW[ind+1,1])])
+            elif ~np.isnan(np.float64(BrightBands_w_NARR_WNW[ind-1,1])): #only a brigh band before
+                brightband_lev = np.int(np.round(np.float64(BrightBands_w_NARR_WNW[ind-1,1]) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_WNW[ind-1,1])
+            else: #only a bright band after
+                brightband_lev = np.int(np.round(np.float64(BrightBands_w_NARR_WNW[ind+1,1]) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_WNW[ind+1,1])
+            #shift the data down to the brightband level
+            dBZ_means_WNW_sec[ind,1:dBZ_means_WNW_sec.shape[1]] = np.hstack([dBZ_means_WNW_sec[ind,brightband_lev+1:dBZ_means_WNW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+            rhohv_means_WNW_sec[ind,1:rhohv_means_WNW_sec.shape[1]] = np.hstack([rhohv_means_WNW_sec[ind,brightband_lev+1:rhohv_means_WNW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+            ZDR_means_WNW_sec[ind,1:ZDR_means_WNW_sec.shape[1]] = np.hstack([ZDR_means_WNW_sec[ind,brightband_lev+1:ZDR_means_WNW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+
+            upper_secondary_WNW.append(np.float64(BrightBands_w_NARR_WNW[ind,8])-brightband_ht)
+            lower_secondary_WNW.append(np.float64(BrightBands_w_NARR_WNW[ind,7])-brightband_ht)
+
+            datetime_NPOL = datetime.datetime.strptime(BrightBands_w_NARR_WNW[ind,4], "%m/%d/%y %H:%M:%S")
+            temps_dates.append(datetime_NPOL)
+            minus_tens.append(np.float64(BrightBands_w_NARR_WNW[ind,9])-brightband_ht)
+            minus_fifteens.append(np.float64(BrightBands_w_NARR_WNW[ind,10])-brightband_ht)
+
+    for i in range(len(dBZ_means_NW)):
+        datetime_object = datetime.datetime.strptime(dBZ_means_NW[i,0], "%m/%d/%y %H:%M:%S")
+        ind = [i for i in range(len(BrightBands_w_NARR_NW[:,0])) if datetime.datetime.strptime(BrightBands_w_NARR_NW[i,0], "%m/%d/%y %H:%M:%S") == datetime_object][0]
+        if np.isnan(np.float64(BrightBands_w_NARR_NW[ind,7])): #no secondary
+            dBZ_means_NW_sec[ind,1:dBZ_means_NW_sec.shape[1]] = float('NaN')
+            rhohv_means_NW_sec[ind,1:rhohv_means_NW_sec.shape[1]] = float('NaN')
+            ZDR_means_NW_sec[ind,1:ZDR_means_NW_sec.shape[1]] = float('NaN')
+        else: #there is a secondary enhancement, keep the values
+            brightband_ht = np.float64(BrightBands_w_NARR_NW[ind,1])
+            if ~np.isnan(np.float64(brightband_ht)): #there is a bright band at that time
+                brightband_lev = np.int(np.round(np.float64(brightband_ht) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_NW[ind,1])
+            elif ~np.isnan(np.float64(BrightBands_w_NARR_NW[ind-1,1])) and ~np.isnan(np.float64(BrightBands_w_NARR_NW[ind+1,1])): #bright band before and after, average values
+                brightband_lev = np.int(np.round(np.mean([np.float64(BrightBands_w_NARR_NW[ind-1,1]),np.float64(BrightBands_w_NARR_NW[ind+1,1])]) * 2,0))
+                brightband_ht = np.mean([np.float64(BrightBands_w_NARR_NW[ind-1,1]),np.float64(BrightBands_w_NARR_NW[ind+1,1])])
+            elif ~np.isnan(np.float64(BrightBands_w_NARR_NW[ind-1,1])): #only a brigh band before
+                brightband_lev = np.int(np.round(np.float64(BrightBands_w_NARR_NW[ind-1,1]) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_NW[ind-1,1])
+            else: #only a bright band after
+                brightband_lev = np.int(np.round(np.float64(BrightBands_w_NARR_NW[ind+1,1]) * 2,0))
+                brightband_ht = np.float64(BrightBands_w_NARR_NW[ind+1,1])
+            #shift the data down to the brightband level
+            dBZ_means_NW_sec[ind,1:dBZ_means_NW_sec.shape[1]] = np.hstack([dBZ_means_NW_sec[ind,brightband_lev+1:dBZ_means_NW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+            rhohv_means_NW_sec[ind,1:rhohv_means_NW_sec.shape[1]] = np.hstack([rhohv_means_NW_sec[ind,brightband_lev+1:rhohv_means_NW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+            ZDR_means_NW_sec[ind,1:ZDR_means_NW_sec.shape[1]] = np.hstack([ZDR_means_NW_sec[ind,brightband_lev+1:ZDR_means_NW_sec.shape[1]], np.full(brightband_lev,float('NaN'))])
+
+            upper_secondary_NW.append(np.float64(BrightBands_w_NARR_NW[ind,8])-brightband_ht)
+            lower_secondary_NW.append(np.float64(BrightBands_w_NARR_NW[ind,7])-brightband_ht)
+
+            datetime_NPOL = datetime.datetime.strptime(BrightBands_w_NARR_NE[ind,4], "%m/%d/%y %H:%M:%S")
+            temps_dates.append(datetime_NPOL)
+            minus_tens.append(np.float64(BrightBands_w_NARR_NE[ind,9])-brightband_ht)
+            minus_fifteens.append(np.float64(BrightBands_w_NARR_NE[ind,10])-brightband_ht)
+
+    #strip off the dates, just values at each level & format as float
+
+    dBZ_NE_sec = np.array(dBZ_means_NE_sec[:,1:dBZ_means_NE_sec.shape[1]]).astype(np.float)
+    dBZ_SW_sec = np.array(dBZ_means_SW_sec[:,1:dBZ_means_SW_sec.shape[1]]).astype(np.float)
+    dBZ_WSW_sec = np.array(dBZ_means_WSW_sec[:,1:dBZ_means_WSW_sec.shape[1]]).astype(np.float)
+    dBZ_WNW_sec = np.array(dBZ_means_WNW_sec[:,1:dBZ_means_WNW_sec.shape[1]]).astype(np.float)
+    dBZ_NW_sec = np.array(dBZ_means_NW_sec[:,1:dBZ_means_NW_sec.shape[1]]).astype(np.float)
+
+    rhohv_NE_sec = np.array(rhohv_means_NE_sec[:,1:rhohv_means_NE_sec.shape[1]]).astype(np.float)
+    rhohv_SW_sec = np.array(rhohv_means_SW_sec[:,1:rhohv_means_SW_sec.shape[1]]).astype(np.float)
+    rhohv_WSW_sec = np.array(rhohv_means_WSW_sec[:,1:rhohv_means_WSW_sec.shape[1]]).astype(np.float)
+    rhohv_WNW_sec = np.array(rhohv_means_WNW_sec[:,1:rhohv_means_WNW_sec.shape[1]]).astype(np.float)
+    rhohv_NW_sec = np.array(rhohv_means_NW_sec[:,1:rhohv_means_NW_sec.shape[1]]).astype(np.float)
+
+    ZDR_NE_sec = np.array(ZDR_means_NE_sec[:,1:ZDR_means_NE_sec.shape[1]]).astype(np.float)
+    ZDR_SW_sec = np.array(ZDR_means_SW_sec[:,1:ZDR_means_SW_sec.shape[1]]).astype(np.float)
+    ZDR_WSW_sec = np.array(ZDR_means_WSW_sec[:,1:ZDR_means_WSW_sec.shape[1]]).astype(np.float)
+    ZDR_WNW_sec = np.array(ZDR_means_WNW_sec[:,1:ZDR_means_WNW_sec.shape[1]]).astype(np.float)
+    ZDR_NW_sec = np.array(ZDR_means_NW_sec[:,1:ZDR_means_NW_sec.shape[1]]).astype(np.float)
+
+    dBZ_means_NE_sec = np.nanmean(dBZ_NE_sec, axis = 0)
+    dBZ_means_SW_sec = np.nanmean(dBZ_SW_sec, axis = 0)
+    dBZ_means_WSW_sec = np.nanmean(dBZ_WSW_sec, axis = 0)
+    dBZ_means_WNW_sec = np.nanmean(dBZ_WNW_sec, axis = 0)
+    dBZ_means_NW_sec = np.nanmean(dBZ_NW_sec, axis = 0)
+
+    rhohv_means_NE_sec = np.nanmean(rhohv_NE_sec, axis = 0)
+    rhohv_means_SW_sec = np.nanmean(rhohv_SW_sec, axis = 0)
+    rhohv_means_WSW_sec = np.nanmean(rhohv_WSW_sec, axis = 0)
+    rhohv_means_WNW_sec = np.nanmean(rhohv_WNW_sec, axis = 0)
+    rhohv_means_NW_sec = np.nanmean(rhohv_NW_sec, axis = 0)
+
+    ZDR_means_NE_sec = np.nanmean(ZDR_NE_sec, axis = 0)
+    ZDR_means_SW_sec = np.nanmean(ZDR_SW_sec, axis = 0)
+    ZDR_means_WSW_sec = np.nanmean(ZDR_WSW_sec, axis = 0)
+    ZDR_means_WNW_sec = np.nanmean(ZDR_WNW_sec, axis = 0)
+    ZDR_means_NW_sec = np.nanmean(ZDR_NW_sec, axis = 0)
+
+    upper_mean_NE = np.nanmean(upper_secondary_NE)
+    lower_mean_NE = np.nanmean(lower_secondary_NE)
+    upper_mean_SW = np.nanmean(upper_secondary_SW)
+    lower_mean_SW = np.nanmean(lower_secondary_SW)
+    upper_mean_WSW = np.nanmean(upper_secondary_WSW)
+    lower_mean_WSW = np.nanmean(lower_secondary_WSW)
+    upper_mean_WNW = np.nanmean(upper_secondary_WNW)
+    lower_mean_WNW = np.nanmean(lower_secondary_WNW)
+    upper_mean_NW = np.nanmean(upper_secondary_NW)
+    lower_mean_NW = np.nanmean(lower_secondary_NW)
+
+    upper_mean = np.nanmean([upper_mean_NE, upper_mean_SW, upper_mean_WSW, upper_mean_WNW, upper_mean_NW])
+    lower_mean = np.nanmean([lower_mean_NE, lower_mean_SW, lower_mean_WSW, lower_mean_WNW, lower_mean_NW])
+
+    bb_mean_NE = np.nanmean(np.array(BrightBands_w_NARR_NE[:,1]).astype(np.float))
+    bb_mean_SW = np.nanmean(np.array(BrightBands_w_NARR_SW[:,1]).astype(np.float))
+    bb_mean_WSW = np.nanmean(np.array(BrightBands_w_NARR_WSW[:,1]).astype(np.float))
+    bb_mean_WNW = np.nanmean(np.array(BrightBands_w_NARR_WNW[:,1]).astype(np.float))
+    bb_mean_NW = np.nanmean(np.array(BrightBands_w_NARR_NW[:,1]).astype(np.float))
+
+    bb_mean = np.nanmean([bb_mean_NE, bb_mean_SW, bb_mean_WSW, bb_mean_WNW, bb_mean_NW])
+
+    minus_tens_mean = np.nanmean(minus_tens)
+    minus_fifteens_mean = np.nanmean(minus_fifteens)
+
+    """
+    PLOT THE VERTICAL POLARIMETRIC DATA
+    """
+
+    plot_z = range(11) #plotting range
+    plot_z_hts = [z*0.5 for z in plot_z]
+
+    nrows, ncols = 1, 3
+    fig, ax = plt.subplots(nrows,ncols) #single plot, n panels
+    ax_big = fig.add_subplot(111, frameon = False)
+    ax_big.axis('off')
+
+    ##DBZ plot on the left
+    dbzs_NE_sec = ax[0].plot(dBZ_means_NE_sec[0:11],plot_z, color = sector_colors[0+1], linestyle = '-')
+    dbzs_NW_sec = ax[0].plot(dBZ_means_NW_sec[0:11],plot_z, color = sector_colors[1+1], linestyle = '-')
+    dbzs_WNW_sec = ax[0].plot(dBZ_means_WNW_sec[0:11],plot_z, color = sector_colors[2+1], linestyle = '-')
+    dbzs_WSW_sec = ax[0].plot(dBZ_means_WSW_sec[0:11],plot_z, color = sector_colors[3+1], linestyle = '-')
+    dbzs_SW_sec = ax[0].plot(dBZ_means_SW_sec[0:11],plot_z, color = sector_colors[4+1], linestyle = '-')
+
+    ax[0].set_xlim([5,32])
+    ax[0].set_xticks(np.arange(10,30+10,10))
+    ax[0].set_xlabel('dBZ')
+
+    #ax[0].hlines(y=minus_tens_mean*2, xmin = 0, xmax = 45, color='black', linestyle=':', label = ''.join(['NPOL Sounding -10'+ '\u00b0'+ 'C']))
+    #ax[0].hlines(y=minus_fifteens_mean*2, xmin = 0, xmax = 45, color='black', linestyle='--', label = ''.join(['NPOL Sounding -15'+ '\u00b0'+ 'C']))
+
+    ax[0].set_yticks(plot_z)
+    ax[0].set_yticklabels(plot_z_hts)
+    #ax[0].set_ylabel('Height above bright band (km)')
+
+    ax[0].grid(True, linestyle = '--', linewidth = 0.5)
+    ax[0].set_title(r'$\mathrm{Z}$')
+
+    ##RHOHV in the middle
+    rhohvs_NE_sec = ax[1].plot(rhohv_means_NE_sec[0:11],plot_z, color = sector_colors[0+1], linestyle = '-')
+    rhohvs_NW_sec = ax[1].plot(rhohv_means_NW_sec[0:11],plot_z, color = sector_colors[1+1], linestyle = '-')
+    rhohvs_WNW_sec = ax[1].plot(rhohv_means_WNW_sec[0:11],plot_z, color = sector_colors[2+1], linestyle = '-')
+    rhohvs_WSW_sec = ax[1].plot(rhohv_means_WSW_sec[0:11],plot_z, color = sector_colors[3+1], linestyle = '-')
+    rhohvs_SW_sec = ax[1].plot(rhohv_means_SW_sec[0:11],plot_z, color = sector_colors[4+1], linestyle = '-')
+
+    ax[1].set_xlim([0.955,1.005])
+    ax[1].set_xticks(np.arange(0.96,1.01,0.02))
+    ax[1].set_xlabel('')
+
+    ax[1].set_yticks(plot_z)
+    ax[1].set_yticklabels(plot_z_hts)
+    ax[1].set_title(r'$\mathrm{\rho_{hv}}$')
+
+    ##ZDR on the right
+    ZDRs_NE_sec = ax[2].plot(ZDR_means_NE_sec[0:11],plot_z, color = sector_colors[0+1], linestyle = '-', label = 'NORTHEAST')
+    ZDRs_NW_sec = ax[2].plot(ZDR_means_NW_sec[0:11],plot_z, color = sector_colors[1+1], linestyle = '-', label = 'NORTHWEST')
+    ZDRs_WNW_sec = ax[2].plot(ZDR_means_WNW_sec[0:11],plot_z, color = sector_colors[2+1], linestyle = '-', label = 'WEST-NORTHWEST')
+    ZDRs_WSW_sec = ax[2].plot(ZDR_means_WSW_sec[0:11],plot_z, color = sector_colors[3+1], linestyle = '-', label = 'WEST-SOUTHWEST')
+    ZDRs_SW_sec = ax[2].plot(ZDR_means_SW_sec[0:11],plot_z, color = sector_colors[4+1], linestyle = '-', label = 'SOUTHWEST')
+
+    ax[2].set_xlim([0.1,1.1])
+    ax[2].set_xticks(np.arange(0.2,1.0+0.4,0.4))
+    ax[2].set_xlabel('dB')
+
+    ax[2].set_yticks(plot_z)
+    ax[2].set_yticklabels(plot_z_hts)
+    ax[2].set_title(r'$\mathrm{Z_{dr}}$')
+
+    for c in range(3):
+        ax[c].grid(True, linestyle = '--', linewidth = 0.5)
+        ax[c].tick_params(axis="x",direction="in")
+        ax[c].tick_params(axis="y",direction="in")
+        if c != 0:
+            labels = [item.get_text() for item in ax[c].get_yticklabels()]
+            empty_string_labels = ['']*len(labels)
+            ax[c].set_yticklabels(empty_string_labels)
+
+        ax[c].axhspan(minus_tens_mean*2, minus_fifteens_mean*2, alpha=0.4, color='lightgrey')
+
+        ax[c].hlines(y = upper_mean_NE*2, xmin = -1, xmax = 45, color = sector_colors[0+1], linestyle = '--')
+        ax[c].hlines(y = upper_mean_NW*2, xmin = -1, xmax = 45, color = sector_colors[1+1], linestyle = '--')
+        ax[c].hlines(y = upper_mean_WNW*2, xmin = -1, xmax = 45, color = sector_colors[2+1], linestyle = '--')
+        ax[c].hlines(y = upper_mean_WSW*2, xmin = -1, xmax = 45, color = sector_colors[3+1], linestyle = '--')
+        ax[c].hlines(y = upper_mean_SW*2, xmin = -1, xmax = 45, color = sector_colors[4+1], linestyle = '--')
+
+        ax[c].hlines(y = lower_mean_NE*2, xmin = -1, xmax = 45, color = sector_colors[0+1], linestyle = ':')
+        ax[c].hlines(y = lower_mean_NW*2, xmin = -1, xmax = 45, color = sector_colors[1+1], linestyle = ':')
+        ax[c].hlines(y = lower_mean_WNW*2, xmin = -1, xmax = 45, color = sector_colors[2+1], linestyle = ':')
+        ax[c].hlines(y = lower_mean_WSW*2, xmin = -1, xmax = 45, color = sector_colors[3+1], linestyle = ':')
+        ax[c].hlines(y = lower_mean_SW*2, xmin = -1, xmax = 45, color = sector_colors[4+1], linestyle = ':')
+
+        '''
+        ax[c].hlines(y = minus_tens_mean*2, xmin = -1, xmax = 45, color='lightgrey' , linestyle = '--')
+        ax[c].hlines(y = minus_fifteens_mean*2, xmin = -1, xmax = 45, color='lightgrey' , linestyle = '--')
+
+        ax[c].axhspan(upper_mean_NE*2, lower_mean_NE*2, alpha=0.4, color=sector_colors[0+1])
+        ax[c].axhspan(upper_mean_NW*2, lower_mean_NW*2, alpha=0.4, color=sector_colors[1+1])
+        ax[c].axhspan(upper_mean_WNW*2, lower_mean_WNW*2, alpha=0.4, color=sector_colors[2+1])
+        ax[c].axhspan(upper_mean_WSW*2, lower_mean_WSW*2, alpha=0.4, color=sector_colors[3+1])
+        ax[c].axhspan(upper_mean_SW*2, lower_mean_SW*2, alpha=0.4, color=sector_colors[4+1])
+        '''
+
+    fig.tight_layout()
+    fig.subplots_adjust(wspace = 0.25)
+
+    lgd = ax[2].legend(bbox_to_anchor=(1.04,0.5), loc="center left", frameon = False, labelspacing=.3)
+    ylab = fig.text(0.04, 0.57, 'Height above bright band(km)', va='center', ha = 'left', rotation='vertical', transform=ax_big.transAxes)
+    info_text = ax[2].text(1.1, 0.04, ''.join(['Grey shading indicates -10' + '\u00b0' + 'C\nto -15' + '\u00b0' + 'C temperature range']), va='bottom', ha = 'left', rotation='horizontal', transform=ax[2].transAxes)
+
+    plt.savefig(save_fn_polars_fig, bbox_extra_artists=(ylab,lgd,info_text), bbox_inches='tight', dpi = 300)
+    plt.close()
