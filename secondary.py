@@ -44,7 +44,8 @@ plot_xy = True #plot the horizonal view of cells that showed an enhancement
 plot_z_fig = True #plot the vertial scan averaged figure  with secondary boundaries
 print_results = False #print the results to the screen for each time - turn off for multiprocessing computing
 run_100 = False #only run the first 100 times = Nov 12/13
-save_data = True
+save_data = False
+save_dBZ_rhohv_ZDR = True
 
 excd_val_low = 4 #dBZ value to exceed to define the lower level
 
@@ -61,6 +62,9 @@ dBZ_exceed_val = 25.0 #threshold value that must exist within +/- min_sep of a b
 #spatial domain in radius from the radar
 small_rad_dim = 10.0 #radius to restrict to away from the radar (changing these requires recalculating n_total cells)
 big_rad_dim = 60.0 #outer bounds of the radar scan, beyond 60 beam smoothing becomes an issue
+
+rhohv_min = 0.91
+
 
 #dir = sys.argv[1] #input from script call, east or west after script name, or all
 
@@ -104,13 +108,45 @@ save_fn_vals_csv_WNW = ''.join([save_dir,'secondary_E_',str(enhance_threshold),'
 save_fn_vals_NW = ''.join([save_dir,'secondary_E_',str(enhance_threshold),'X',str(excd_val_low),'excd_vals_NW.npy'])
 save_fn_vals_csv_NW = ''.join([save_dir,'secondary_E_',str(enhance_threshold),'X',str(excd_val_low),'excd_vals_NW.csv'])
 
+dBZ_means_fn_NE = ''.join([save_dir,'dBZ_means_NE.npy'])
+dBZ_means_fn_csv_NE = ''.join([save_dir,'dBZ_means_NE.csv'])
+dBZ_means_fn_SW = ''.join([save_dir,'dBZ_means_SW.npy'])
+dBZ_means_fn_csv_SW = ''.join([save_dir,'dBZ_means_SW.csv'])
+dBZ_means_fn_WSW = ''.join([save_dir,'dBZ_means_WSW.npy'])
+dBZ_means_fn_csv_WSW = ''.join([save_dir,'dBZ_means_WSW.csv'])
+dBZ_means_fn_WNW = ''.join([save_dir,'dBZ_means_WNW.npy'])
+dBZ_means_fn_csv_WNW = ''.join([save_dir,'dBZ_means_WNW.csv'])
+dBZ_means_fn_NW = ''.join([save_dir,'dBZ_means_NW.npy'])
+dBZ_means_fn_csv_NW = ''.join([save_dir,'dBZ_means_NW.csv'])
+
+rhohv_means_fn_NE = ''.join([save_dir,'rhohv_means_NE.npy'])
+rhohv_means_fn_csv_NE = ''.join([save_dir,'rhohv_means_NE.csv'])
+rhohv_means_fn_SW = ''.join([save_dir,'rhohv_means_SW.npy'])
+rhohv_means_fn_csv_SW = ''.join([save_dir,'rhohv_means_SW.csv'])
+rhohv_means_fn_WSW = ''.join([save_dir,'rhohv_means_WSW.npy'])
+rhohv_means_fn_csv_WSW = ''.join([save_dir,'rhohv_means_WSW.csv'])
+rhohv_means_fn_WNW = ''.join([save_dir,'rhohv_means_WNW.npy'])
+rhohv_means_fn_csv_WNW = ''.join([save_dir,'rhohv_means_WNW.csv'])
+rhohv_means_fn_NW = ''.join([save_dir,'rhohv_means_NW.npy'])
+rhohv_means_fn_csv_NW = ''.join([save_dir,'rhohv_means_NW.csv'])
+
+ZDR_means_fn_NE = ''.join([save_dir,'ZDR_means_NE.npy'])
+ZDR_means_fn_csv_NE = ''.join([save_dir,'ZDR_means_NE.csv'])
+ZDR_means_fn_SW = ''.join([save_dir,'ZDR_means_SW.npy'])
+ZDR_means_fn_csv_SW = ''.join([save_dir,'ZDR_means_SW.csv'])
+ZDR_means_fn_WSW = ''.join([save_dir,'ZDR_means_WSW.npy'])
+ZDR_means_fn_csv_WSW = ''.join([save_dir,'ZDR_means_WSW.csv'])
+ZDR_means_fn_WNW = ''.join([save_dir,'ZDR_means_WNW.npy'])
+ZDR_means_fn_csv_WNW = ''.join([save_dir,'ZDR_means_WNW.csv'])
+ZDR_means_fn_NW = ''.join([save_dir,'ZDR_means_NW.npy'])
+ZDR_means_fn_csv_NW = ''.join([save_dir,'ZDR_means_NW.csv'])
 
 #load latest bright band data from BBIDv6
 
-bb_data_east = ''.join(['brightbandsfound_v6_r_6_time0x35.0pcntx25.0_withrhohv_0.910.97_east.npy'])
+#bb_data_east = ''.join(['brightbandsfound_v6_r_6_time0x35.0pcntx25.0_withrhohv_0.910.97_east.npy'])
 filelist_fn_east = ''.join([data_dir,'filelist.npy']) #from BBIDv6
 
-bb_data_west = ''.join(['brightbandsfound_v6_r_6_time0x15.0pcntx25.0_withrhohv_0.910.97_west.npy'])
+#bb_data_west = ''.join(['brightbandsfound_v6_r_6_time0x15.0pcntx25.0_withrhohv_0.910.97_west.npy'])
 filelist_fn_west = ''.join([data_dir,'filelist_west.npy']) #from BBIDv6
 
 bb_data_NE = 'brightbandsfound_V7_x35.0pcntx25.0_withrhohv_0.910.97_NE.npy'
@@ -131,11 +167,11 @@ bright_bands_WSW = np.load(bb_fn_WSW)
 bright_bands_WNW = np.load(bb_fn_WNW)
 bright_bands_NW = np.load(bb_fn_NW)
 
-bb_fn_east = ''.join([bb_dir,bb_data_east])
-bright_bands_east = np.load(bb_fn_east)#time,bbfound,level, ...
+#bb_fn_east = ''.join([bb_dir,bb_data_east])
+#bright_bands_east = np.load(bb_fn_east)#time,bbfound,level, ...
 
-bb_fn_west = ''.join([bb_dir,bb_data_west])
-bright_bands_west = np.load(bb_fn_west)
+#bb_fn_west = ''.join([bb_dir,bb_data_west])
+#bright_bands_west = np.load(bb_fn_west)
 
 date_list_fn = ''.join([data_dir,'date_list.npy']) #load in date_list from BBIDv6
 date_list = np.load(date_list_fn)
@@ -173,6 +209,25 @@ secondary_WNW = np.array([1,2,3,4,5,6,7,8])
 secondary_vals_WNW = np.array([1,2,3])
 secondary_NW = np.array([1,2,3,4,5,6,7,8])
 secondary_vals_NW = np.array([1,2,3])
+
+dBZ_means_NE_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+dBZ_means_SW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+dBZ_means_WSW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+dBZ_means_WNW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+dBZ_means_NW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+
+rhohv_means_NE_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+rhohv_means_SW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+rhohv_means_WSW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+rhohv_means_WNW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+rhohv_means_NW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+
+ZDR_means_NE_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+ZDR_means_SW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+ZDR_means_WSW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+ZDR_means_WNW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+ZDR_means_NW_global = np.array([-1, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12])
+
 
 """
 SETUP FUNCTIONS
@@ -500,6 +555,10 @@ def main_func(i):
     date_west = num2date(nc_fid.variables['base_time'][:], units =nc_fid.variables['base_time'].units , calendar = 'standard')
     dBZ_west = np.array(nc_fid.variables['DBZ'][:,:,:,:])#dimesions [time, z, y, x] = [1,25,300,300]
     dBZ_west[dBZ_west == -9999.0] = float('NaN')
+    rhohv_west = np.array(nc_fid.variables['RHOHV'][:,:,:,:])#dimesions [time, z, y, x] = [1,25,300,300]
+    rhohv_west[rhohv_west == -9999.0] = float('NaN')
+    ZDR_west = np.array(nc_fid.variables['ZDR'][:,:,:,:])#dimesions [time, z, y, x] = [1,25,300,300]
+    ZDR_west[ZDR_west == -9999.0] = float('NaN')
     nc_fid.close()
 
     #then get the east - should follow the west by about 20 minutes
@@ -507,19 +566,28 @@ def main_func(i):
     date_east = num2date(nc_fid.variables['base_time'][:], units =nc_fid.variables['base_time'].units , calendar = 'standard')
     dBZ_east = np.array(nc_fid.variables['DBZ'][:,:,:,:])
     dBZ_east[dBZ_east == -9999.0] = float('NaN')
+    rhohv_east = np.array(nc_fid.variables['RHOHV'][:,:,:,:])#dimesions [time, z, y, x] = [1,25,300,300]
+    rhohv_east[rhohv_east == -9999.0] = float('NaN')
+    ZDR_east = np.array(nc_fid.variables['ZDR'][:,:,:,:])#dimesions [time, z, y, x] = [1,25,300,300]
+    ZDR_east[ZDR_east == -9999.0] = float('NaN')
     nc_fid.close()
 
     time_diff = (date_east-date_west).total_seconds()/60 #should output the time difference between the two scans in minutes
     dBZ_complete = np.full((1,z_dim,y_dim,x_dim),float('NaN'))
+    rhohv_complete = np.full((1,z_dim,y_dim,x_dim),float('NaN'))
+    ZDR_complete = np.full((1,z_dim,y_dim,x_dim),float('NaN'))
     if 10 < time_diff < 30: #put the two scans together for one scan
         dBZ_complete[:,:,:,0:int(x_dim/2)] = dBZ_west[:,:,:,0:int(x_dim/2)]
         dBZ_complete[:,:,:,int(x_dim/2):int(x_dim)] = dBZ_east[:,:,:,int(x_dim/2):int(x_dim)]
+        rhohv_complete[:,:,:,0:int(x_dim/2)] = rhohv_west[:,:,:,0:int(x_dim/2)]
+        rhohv_complete[:,:,:,int(x_dim/2):int(x_dim)] = rhohv_east[:,:,:,int(x_dim/2):int(x_dim)]
+        ZDR_complete[:,:,:,0:int(x_dim/2)] = ZDR_west[:,:,:,0:int(x_dim/2)]
+        ZDR_complete[:,:,:,int(x_dim/2):int(x_dim)] = ZDR_east[:,:,:,int(x_dim/2):int(x_dim)]
 
-    bb_index_west = np.where(bright_bands_west[:,0]==date_west.strftime("%m/%d/%y %H:%M:%S"))[0][0]
-    bb_index_east = np.where(bright_bands_east[:,0]==date_east.strftime("%m/%d/%y %H:%M:%S"))[0][0]
+    #bb_index_west = np.where(bright_bands_west[:,0]==date_west.strftime("%m/%d/%y %H:%M:%S"))[0][0]
+    #bb_index_east = np.where(bright_bands_east[:,0]==date_east.strftime("%m/%d/%y %H:%M:%S"))[0][0]
 
     bb_index_NE = np.where(bright_bands_NE[:,0]==date_east.strftime("%m/%d/%y %H:%M:%S"))[0][0]
-    #bb_index_SW, bb_index_WSW, bb_index_WNW, bb_index_NW = bb_index_NE, bb_index_NE, bb_index_NE, bb_index_NE
     bb_index_SW = np.where(bright_bands_SW[:,0]==date_west.strftime("%m/%d/%y %H:%M:%S"))[0][0]
     bb_index_WSW = np.where(bright_bands_WSW[:,0]==date_west.strftime("%m/%d/%y %H:%M:%S"))[0][0]
     bb_index_WNW = np.where(bright_bands_WNW[:,0]==date_west.strftime("%m/%d/%y %H:%M:%S"))[0][0]
@@ -536,6 +604,8 @@ def main_func(i):
         #date = date_west
     #elif dir == 'all':
     dBZ = dBZ_complete[:,:,:,:]
+    rhohv = rhohv_complete[:,:,:,:]
+    ZDR = ZDR_complete[:,:,:,:]
     date = date_west
     """
     INITIALIZE OUTPUT/PLOTTING ARRAYS FOR USE LATER
@@ -555,14 +625,14 @@ def main_func(i):
     adj_WNW = -1 if bb_index_WNW == numfiles_west else 0
     adj_NW = -1 if bb_index_NW == numfiles_west else 0
 
-    if bb_index_east == numfiles_east: #adjust to avoid running past end of the file list
-        adj_east = -1
-    else:
-        adj_east = 0
-    if bb_index_west == numfiles_west: #adjust to avoid running past end of the file list
-        adj_west = -1
-    else:
-        adj_west = 0
+    #if bb_index_east == numfiles_east: #adjust to avoid running past end of the file list
+        #adj_east = -1
+    #else:
+        #adj_east = 0
+    #if bb_index_west == numfiles_west: #adjust to avoid running past end of the file list
+        #adj_west = -1
+    #else:
+        #adj_west = 0
 
     enhanced_sectors = [False,False,False,False,False] #NE,SW,WSW,WNW,NW
 
@@ -571,6 +641,18 @@ def main_func(i):
     dBZ_WSW = np.full([z_dim, y_dim, x_dim], float('NaN'))
     dBZ_WNW = np.full([z_dim, y_dim, x_dim], float('NaN'))
     dBZ_NW = np.full([z_dim, y_dim, x_dim], float('NaN'))
+
+    rhohv_NE = np.full([z_dim, y_dim, x_dim], float('NaN'))
+    rhohv_SW = np.full([z_dim, y_dim, x_dim], float('NaN'))
+    rhohv_WSW = np.full([z_dim, y_dim, x_dim], float('NaN'))
+    rhohv_WNW = np.full([z_dim, y_dim, x_dim], float('NaN'))
+    rhohv_NW = np.full([z_dim, y_dim, x_dim], float('NaN'))
+
+    ZDR_NE = np.full([z_dim, y_dim, x_dim], float('NaN'))
+    ZDR_SW = np.full([z_dim, y_dim, x_dim], float('NaN'))
+    ZDR_WSW = np.full([z_dim, y_dim, x_dim], float('NaN'))
+    ZDR_WNW = np.full([z_dim, y_dim, x_dim], float('NaN'))
+    ZDR_NW = np.full([z_dim, y_dim, x_dim], float('NaN'))
 
 
     """
@@ -583,37 +665,48 @@ def main_func(i):
                 dBZ_east[0,:, y_ind, x_ind] = float('NaN')
                 dBZ_west[0,:, y_ind, x_ind] = float('NaN')
                 dBZ[0,:, y_ind, x_ind] = float('NaN')
+                rhohv[0,:, y_ind, x_ind] = float('NaN')
+                ZDR[0,:, y_ind, x_ind] = float('NaN')
 
             if ~np.isnan(NE_mask[y_ind,x_ind]):
                 dBZ_NE[:,y_ind,x_ind] = dBZ_complete[0,:,y_ind,x_ind]
+                rhohv_NE[:,y_ind,x_ind] = rhohv_complete[0,:,y_ind,x_ind]
+                ZDR_NE[:,y_ind,x_ind] = ZDR_complete[0,:,y_ind,x_ind]
             if ~np.isnan(SW_mask[y_ind,x_ind]):
                 dBZ_SW[:,y_ind,x_ind] = dBZ_complete[0,:,y_ind,x_ind]
+                rhohv_SW[:,y_ind,x_ind] = rhohv_complete[0,:,y_ind,x_ind]
+                ZDR_SW[:,y_ind,x_ind] = ZDR_complete[0,:,y_ind,x_ind]
             if ~np.isnan(WSW_mask[y_ind,x_ind]):
                 dBZ_WSW[:,y_ind,x_ind] = dBZ_complete[0,:,y_ind,x_ind]
+                rhohv_WSW[:,y_ind,x_ind] = rhohv_complete[0,:,y_ind,x_ind]
+                ZDR_WSW[:,y_ind,x_ind] = ZDR_complete[0,:,y_ind,x_ind]
             if ~np.isnan(WNW_mask[y_ind,x_ind]):
                 dBZ_WNW[:,y_ind,x_ind] = dBZ_complete[0,:,y_ind,x_ind]
+                rhohv_WNW[:,y_ind,x_ind] = rhohv_complete[0,:,y_ind,x_ind]
+                ZDR_WNW[:,y_ind,x_ind] = ZDR_complete[0,:,y_ind,x_ind]
             if ~np.isnan(NW_mask[y_ind,x_ind]):
                 dBZ_NW[:,y_ind,x_ind] = dBZ_complete[0,:,y_ind,x_ind]
+                rhohv_NW[:,y_ind,x_ind] = rhohv_complete[0,:,y_ind,x_ind]
+                ZDR_NW[:,y_ind,x_ind] = ZDR_complete[0,:,y_ind,x_ind]
 
-
-    #print(period_mode_NE)
     dBZ_means_NE = np.full(z_dim, float('NaN'))
     dBZ_means_SW = np.full(z_dim, float('NaN'))
     dBZ_means_WSW = np.full(z_dim, float('NaN'))
     dBZ_means_WNW = np.full(z_dim, float('NaN'))
     dBZ_means_NW = np.full(z_dim, float('NaN'))
 
-    for i in range(z_dim):
-        if ~np.isnan(dBZ_NE[i,:,:]).all():
-            dBZ_means_NE[i] = np.nanmean(dBZ_NE[i,:,:])
-        if ~np.isnan(dBZ_SW[i,:,:]).all():
-            dBZ_means_SW[i] = np.nanmean(dBZ_SW[i,:,:])
-        if ~np.isnan(dBZ_WSW[i,:,:]).all():
-            dBZ_means_WSW[i] = np.nanmean(dBZ_WSW[i,:,:])
-        if ~np.isnan(dBZ_WNW[i,:,:]).all():
-            dBZ_means_WNW[i] = np.nanmean(dBZ_WNW[i,:,:])
-        if ~np.isnan(dBZ_NW[i,:,:]).all():
-            dBZ_means_NW[i] = np.nanmean(dBZ_NW[i,:,:])
+    rhohv_means_NE = np.full(z_dim, float('NaN'))
+    rhohv_means_SW = np.full(z_dim, float('NaN'))
+    rhohv_means_WSW = np.full(z_dim, float('NaN'))
+    rhohv_means_WNW = np.full(z_dim, float('NaN'))
+    rhohv_means_NW = np.full(z_dim, float('NaN'))
+
+    ZDR_means_NE = np.full(z_dim, float('NaN'))
+    ZDR_means_SW = np.full(z_dim, float('NaN'))
+    ZDR_means_WSW = np.full(z_dim, float('NaN'))
+    ZDR_means_WNW = np.full(z_dim, float('NaN'))
+    ZDR_means_NW = np.full(z_dim, float('NaN'))
+
 
 
     """
@@ -624,9 +717,9 @@ def main_func(i):
         ('1' in bright_bands_WSW[bb_index_WSW-1:bb_index_WSW+1+adj_WSW,1]) or \
         ('1' in bright_bands_WNW[bb_index_WNW-1:bb_index_WNW+1+adj_WNW,1]) or \
         ('1' in bright_bands_NW[bb_index_NW-1:bb_index_NW+1+adj_NW,1]) or \
-        ('1' in bright_bands_NE[bb_index_NE-1:bb_index_NE+1+adj_NE,1]): #there was a bright band found from bbidv6
+        ('1' in bright_bands_NE[bb_index_NE-1:bb_index_NE+1+adj_NE,1]): #THERE WAS A BRIGHT BAND FOUND FROM brightband.py
 
-        #allow for selection of +/- 1 time period away from the bright band
+        #GRAB THE CORRECT HEIGHT IN EACH SECTOR, ALLOWING FOR SELECTION OF +/- 1 TIME PERIOD (~20 MINS) FROM BRIGHT BAND FOUND
         if bright_bands_SW[bb_index_SW,1] == '1':
             bb_ht_SW = (bright_bands_SW[bb_index_SW,2])
         elif bright_bands_SW[bb_index_SW-1,1] == '1':
@@ -673,7 +766,7 @@ def main_func(i):
             bb_ht_NE = float('NaN')
 
 
-        #nearest level to the bright band
+        #IDENTIFY THE LAYER CLOSEST TO THE BRIGHT BAND
         bb_lev_SW = np.int(np.round(np.float64(bb_ht_SW) * 2,0)) if ~np.isnan(np.float64(bb_ht_SW)) else float('NaN')
         bb_diff_SW = np.float64(bb_ht_SW) - (bb_lev_SW * 0.5) if ~np.isnan(np.float64(bb_ht_SW)) else float('NaN')
 
@@ -689,6 +782,54 @@ def main_func(i):
         bb_lev_NE = np.int(np.round(np.float64(bb_ht_NE) * 2,0)) if ~np.isnan(np.float64(bb_ht_NE)) else float('NaN')
         bb_diff_NE = np.float64(bb_ht_NE) - (bb_lev_NE * 0.5) if ~np.isnan(np.float64(bb_ht_NE)) else float('NaN')
 
+
+        ##FILTER OUT ANY NOISY RHOHV VALUES DUE TO RADAR NEAR THE TERRAIN. ONLY APPLY ABOVE THE BRIGHT BAND WHEN A BRIGHT BAND IS PRESENT
+        if ~np.isnan(bb_lev_NE):
+            for zabovebb in range(bb_lev_NE,z_dim):
+                layer = np.copy(rhohv_NE[zabovebb,:,:])
+                if ~np.isnan(layer).all():
+                    layer[layer < rhohv_min] = float('NaN')
+                rhohv_NE[zabovebb,:,:] = layer
+        elif ~np.isnan(rhohv_NE).all():
+            rhohv_NE[rhohv_NE < rhohv_min] = float('NaN')
+
+        if ~np.isnan(bb_lev_SW):
+            for zabovebb in range(bb_lev_SW,z_dim):
+                layer = np.copy(rhohv_SW[zabovebb,:,:])
+                if ~np.isnan(layer).all():
+                    layer[layer < rhohv_min] = float('NaN')
+                rhohv_SW[zabovebb,:,:] = layer
+        elif ~np.isnan(rhohv_SW).all():
+            rhohv_SW[rhohv_SW < rhohv_min] = float('NaN')
+
+        if ~np.isnan(bb_lev_WSW):
+            for zabovebb in range(bb_lev_WSW,z_dim):
+                layer = np.copy(rhohv_WSW[zabovebb,:,:])
+                if ~np.isnan(layer).all():
+                    layer[layer < rhohv_min] = float('NaN')
+                rhohv_WSW[zabovebb,:,:] = layer
+        elif ~np.isnan(rhohv_WSW).all():
+            rhohv_WSW[rhohv_WSW < rhohv_min] = float('NaN')
+
+        if ~np.isnan(bb_lev_WNW):
+            for zabovebb in range(bb_lev_WNW,z_dim):
+                layer = np.copy(rhohv_WNW[zabovebb,:,:])
+                if ~np.isnan(layer).all():
+                    layer[layer < rhohv_min] = float('NaN')
+                rhohv_WNW[zabovebb,:,:] = layer
+        elif ~np.isnan(rhohv_WNW).all():
+            rhohv_WNW[rhohv_WNW < rhohv_min] = float('NaN')
+
+        if ~np.isnan(bb_lev_NW):
+            for zabovebb in range(bb_lev_NW,z_dim):
+                layer = np.copy(rhohv_NW[zabovebb,:,:])
+                if ~np.isnan(layer).all():
+                    layer[layer < rhohv_min] = float('NaN')
+                rhohv_NW[zabovebb,:,:] = layer
+        elif ~np.isnan(rhohv_NW).all():
+            rhohv_NW[rhohv_NW < rhohv_min] = float('NaN')
+
+
         for z_i in range(z_dim):
             if ~np.isnan(dBZ_west[0,z_i,:,:]).all():
                 dBZ_means_west[z_i] = np.nanmean(dBZ_west[0,z_i,:,:])
@@ -697,6 +838,7 @@ def main_func(i):
             if ~np.isnan(dBZ[0,z_i,:,:]).all():
                 dBZ_means[z_i] = np.nanmean(dBZ[0,z_i,:,:])
 
+        #IDENTIFY THE TOP LAYER OF DATA
         where_nan_west = np.argwhere(~np.isnan(dBZ_means_west[:]))
         where_nan_east = np.argwhere(~np.isnan(dBZ_means_east[:]))
         if len(where_nan_west) > 0:
@@ -709,16 +851,13 @@ def main_func(i):
             top_lev_east = z_dim
 
 
-        n_found = 0 #total enhanced grid cells found
+        n_found = 0 #INITIALIZE THE TOTAL NUMBER OF GRID CELLS WITH ENHANCEMENT FOUND, FOR USE IN EVALUATION
 
         n_NE_found = 0
         n_SW_found = 0
         n_WSW_found = 0
         n_WNW_found = 0
         n_NW_found = 0
-
-        prcnt_cells_met = 0
-        enhancement_found = 0
 
         low_enhance_lev = []
         high_enhance_lev = []
@@ -823,8 +962,6 @@ def main_func(i):
         high_lev_enh = False
         two_lev_enh = False
 
-
-
         """
         MODE SELECTION, LOOP THROUGH EACH SECTOR
         """
@@ -832,6 +969,7 @@ def main_func(i):
         for s in range(len(sectors)):
             alpha_1 = sectors[s][0]
             alpha_2 = sectors[s][1]
+            prcnt_cells_met = 0
             if [alpha_1,alpha_2] == NE:
                 mask,sector_levels = NE_mask[:,:], NE_sector_levels[:,:,:]
                 n = n_NE_found
@@ -956,17 +1094,6 @@ def main_func(i):
                     NW_enhancement[1] = mean_high_enhance_lev
                     NW_enhancement[2] = mean_low_enhance_2_lev
                     NW_enhancement[3] = mean_high_enhance_2_lev
-            else:
-                pass
-                """
-                prcnt_cells_met = 0
-                prcnt_cells_met_1 = 0
-                prcnt_cells_met_2 = 0
-                mean_low_enhance_lev = float('NaN')
-                mean_high_enhance_lev = float('NaN')
-                mean_low_enhance_2_lev = float('NaN')
-                mean_high_enhance_2_lev = float('NaN')
-                """
 
         low_lines = [NE_enhancement[0],SW_enhancement[0],WSW_enhancement[0],WNW_enhancement[0],NW_enhancement[0]]
         high_lines = [NE_enhancement[1],SW_enhancement[1],WSW_enhancement[1],WNW_enhancement[1],NW_enhancement[1]]
@@ -1062,60 +1189,6 @@ def main_func(i):
                             plot_array[y_ind,x_ind] == 3
                             high_lev_enh = True
                             enhanced_sectors[4] = True
-
-
-        """
-        TRY TO NOT USE THIS SECTION -- LEAVING TILL EVALUATION OF WHETHER THE SECTORED METHOD SEEMS TO WORK WELL ENOUGH
-        DENSITY ASSESMENT - EVALUATE GRID BY GRID FOR HIGH DENSITY REGIONS OF SECONDARY ENHANCEMENT
-        IDNETIFY REGIONS OF ENHANCEMENT IN (X,Y) AND Z, BUILD PLOTTING ARRAY
-        """
-
-        """
-        for x_ind in range(0+half_width,x_dim-half_width):
-            for y_ind in range(0+half_width,y_dim-half_width):
-                subset = plot_array[y_ind-half_width:y_ind+half_width+1,x_ind-half_width:x_ind+half_width+1]
-                subset_1 = plot_array_1[y_ind-half_width:y_ind+half_width+1,x_ind-half_width:x_ind+half_width+1]
-                subset_2 = plot_array_2[y_ind-half_width:y_ind+half_width+1,x_ind-half_width:x_ind+half_width+1]
-                total_met = np.nansum(compare_nan_array(np.greater, subset, 0))
-                #which enhanced level satisfies the grid box criteria
-                total_met_1 = np.nansum(compare_nan_array(np.greater, subset_1, 0))
-                total_met_2 = np.nansum(compare_nan_array(np.greater, subset_2, 0))
-
-                if total_met_1 >= ((grid_density/100)*total_grid_cells): #set cells that met criteria = 2
-                    enhancement_true = True
-                    enhancement_found = 1
-                    for a in range(grid_size):
-                        for b in range(grid_size):
-                            if subset_1[a,b] == 1: #a grid cell that had originally found an enhancement layer in layer 1
-                                subset_1[a,b] = 2
-                            if subset[a,b] == 3 or subset[a,b] == 4:
-                                subset[a,b] = 4
-                            elif subset[a,b] == 1:
-                                subset[a,b] = 2
-                            low_lev_enh = True
-                    #plot_array[y_ind-half_width:y_ind+half_width,x_ind-half_width:x_ind+half_width] = subset_1
-
-                if total_met_2 >= ((grid_density/100)*total_grid_cells): #set cells that met criteria = 2
-                    enhancement_true = True
-                    enhancement_found = 1
-                    for a in range(grid_size):
-                        for b in range(grid_size):
-                            if subset_2[a,b] == 1:  #grid cell that had an enhancement in layer 2 that was already identified by layer 1
-                                subset_2[a,b] = 3
-                            if subset[a,b] == 2 or subset[a,b] == 4:
-                                subset[a,b] = 4
-                                two_lev_enh = True
-                            elif subset[a,b] == 1: #grid cell that had an enhancement in layer 2 only
-                                subset[a,b] = 3
-                                high_lev_enh = True
-
-                #update plotting arrays with new values
-                plot_array_1[y_ind-half_width:y_ind+half_width+1,x_ind-half_width:x_ind+half_width+1] = subset_1[:,:]
-                plot_array_2[y_ind-half_width:y_ind+half_width+1,x_ind-half_width:x_ind+half_width+1] = subset_2[:,:]
-                plot_array[y_ind-half_width:y_ind+half_width+1,x_ind-half_width:x_ind+half_width+1] = subset[:,:]
-
-        """
-
 
         """
         COLLECT ENHANCEMENT LAYERS AND VALUES FROM THE HIGH DENSITY REGIONS - (ONLY USES CELLS THAT FALL WITHIN SECTORS THAT FOUND ENHANCEMENT)
@@ -1221,6 +1294,18 @@ def main_func(i):
                 date_secondary_vals = np.array([date.strftime("%m/%d/%y %H:%M:%S"),float('NaN'),float('NaN')])
 
     else:
+        ## Filter out noisy correlation coefficient, throw out values below min rhohv level.
+        if ~np.isnan(rhohv_NE).all():
+            rhohv_NE[rhohv_NE < rhohv_min] = float('NaN')
+        if ~np.isnan(rhohv_SW).all():
+            rhohv_SW[rhohv_SW < rhohv_min] = float('NaN')
+        if ~np.isnan(rhohv_WSW).all():
+            rhohv_WSW[rhohv_WSW < rhohv_min] = float('NaN')
+        if ~np.isnan(rhohv_WNW).all():
+            rhohv_WNW[rhohv_WNW < rhohv_min] = float('NaN')
+        if ~np.isnan(rhohv_NW).all():
+            rhohv_NW[rhohv_NW < rhohv_min] = float('NaN')
+
         row_to_append_NE = np.array([date_east.strftime("%m/%d/%y %H:%M:%S"),0,float('NaN'),float('NaN'), float('NaN'),float('NaN'), float('NaN'),float('NaN')])
         date_secondary_vals_NE = np.array([date_east.strftime("%m/%d/%y %H:%M:%S"),float('NaN'),float('NaN')])
         row_to_append_SW = np.array([date_west.strftime("%m/%d/%y %H:%M:%S"),0,float('NaN'),float('NaN'), float('NaN'),float('NaN'), float('NaN'),float('NaN')])
@@ -1231,6 +1316,55 @@ def main_func(i):
         date_secondary_vals_WNW = np.array([date_west.strftime("%m/%d/%y %H:%M:%S"),float('NaN'),float('NaN')])
         row_to_append_NW = np.array([date_west.strftime("%m/%d/%y %H:%M:%S"),0,float('NaN'),float('NaN'), float('NaN'),float('NaN'), float('NaN'),float('NaN')])
         date_secondary_vals_NW = np.array([date_west.strftime("%m/%d/%y %H:%M:%S"),float('NaN'),float('NaN')])
+
+
+    """
+    CALCULATE POLARIMETRIC MEANS FOR EACH SECTOR
+    """
+    for i in range(z_dim):
+        if ~np.isnan(dBZ_NE[i,:,:]).all():
+            dBZ_means_NE[i] = np.nanmean(dBZ_NE[i,:,:])
+            ZDR_means_NE[i] = np.nanmean(ZDR_NE[i,:,:])
+            rhohv_means_NE[i] = np.nanmean(rhohv_NE[i,:,:])
+
+        if ~np.isnan(dBZ_SW[i,:,:]).all():
+            dBZ_means_SW[i] = np.nanmean(dBZ_SW[i,:,:])
+            ZDR_means_SW[i] = np.nanmean(ZDR_SW[i,:,:])
+            rhohv_means_SW[i] = np.nanmean(rhohv_SW[i,:,:])
+
+        if ~np.isnan(dBZ_WSW[i,:,:]).all():
+            dBZ_means_WSW[i] = np.nanmean(dBZ_WSW[i,:,:])
+            ZDR_means_WSW[i] = np.nanmean(ZDR_WSW[i,:,:])
+            rhohv_means_WSW[i] = np.nanmean(rhohv_WSW[i,:,:])
+
+        if ~np.isnan(dBZ_WNW[i,:,:]).all():
+            dBZ_means_WNW[i] = np.nanmean(dBZ_WNW[i,:,:])
+            ZDR_means_WNW[i] = np.nanmean(ZDR_WNW[i,:,:])
+            rhohv_means_WNW[i] = np.nanmean(rhohv_WNW[i,:,:])
+
+        if ~np.isnan(dBZ_NW[i,:,:]).all():
+            dBZ_means_NW[i] = np.nanmean(dBZ_NW[i,:,:])
+            ZDR_means_NW[i] = np.nanmean(ZDR_NW[i,:,:])
+            rhohv_means_NW[i] = np.nanmean(rhohv_NW[i,:,:])
+
+    #stick the date on the front of array for sorting and reference later
+    dBZ_means_NE_out = np.hstack((np.array([date_east.strftime("%m/%d/%y %H:%M:%S")]), dBZ_means_NE))
+    dBZ_means_SW_out = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), dBZ_means_SW))
+    dBZ_means_WSW_out = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), dBZ_means_WSW))
+    dBZ_means_WNW_out = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), dBZ_means_WNW))
+    dBZ_means_NW_out = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), dBZ_means_NW))
+
+    rhohv_means_NE = np.hstack((np.array([date_east.strftime("%m/%d/%y %H:%M:%S")]), rhohv_means_NE))
+    rhohv_means_SW = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), rhohv_means_SW))
+    rhohv_means_WSW = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), rhohv_means_WSW))
+    rhohv_means_WNW = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), rhohv_means_WNW))
+    rhohv_means_NW = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), rhohv_means_NW))
+
+    ZDR_means_NE = np.hstack((np.array([date_east.strftime("%m/%d/%y %H:%M:%S")]), ZDR_means_NE))
+    ZDR_means_SW = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), ZDR_means_SW))
+    ZDR_means_WSW = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), ZDR_means_WSW))
+    ZDR_means_WNW = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), ZDR_means_WNW))
+    ZDR_means_NW = np.hstack((np.array([date.strftime("%m/%d/%y %H:%M:%S")]), ZDR_means_NW))
 
     if print_results:
         print('NE', row_to_append_NE)
@@ -1452,7 +1586,10 @@ def main_func(i):
             plt.close()
     plt.close()
     print(''.join(['Worker finished: ',outname_west,' to ',outname_east]))
-    return(row_to_append_NE, date_secondary_vals_NE, row_to_append_SW, date_secondary_vals_SW, row_to_append_WSW, date_secondary_vals_WSW, row_to_append_WNW, date_secondary_vals_WNW, row_to_append_NW, date_secondary_vals_NW)
+    return(row_to_append_NE, date_secondary_vals_NE, row_to_append_SW, date_secondary_vals_SW, row_to_append_WSW, date_secondary_vals_WSW, row_to_append_WNW, date_secondary_vals_WNW, row_to_append_NW, date_secondary_vals_NW,\
+        dBZ_means_NE_out, dBZ_means_SW_out, dBZ_means_WSW_out, dBZ_means_WNW_out, dBZ_means_NW_out, \
+        rhohv_means_NE, rhohv_means_SW, rhohv_means_WSW, rhohv_means_WNW, rhohv_means_NW, \
+        ZDR_means_NE, ZDR_means_SW, ZDR_means_WSW, ZDR_means_WNW, ZDR_means_NW)
 
 
 """
@@ -1473,6 +1610,25 @@ for result in results.get():
     secondary_vals_WNW = np.vstack((secondary_vals_WNW,result[7]))
     secondary_NW = np.vstack((secondary_NW,result[8]))
     secondary_vals_NW = np.vstack((secondary_vals_NW,result[9]))
+
+    dBZ_means_NE_global = np.vstack((dBZ_means_NE_global, result[10]))
+    dBZ_means_SW_global = np.vstack((dBZ_means_SW_global, result[11]))
+    dBZ_means_WSW_global = np.vstack((dBZ_means_WSW_global, result[12]))
+    dBZ_means_WNW_global = np.vstack((dBZ_means_WNW_global, result[13]))
+    dBZ_means_NW_global = np.vstack((dBZ_means_NW_global, result[14]))
+
+    rhohv_means_NE_global = np.vstack((rhohv_means_NE_global, result[15]))
+    rhohv_means_SW_global = np.vstack((rhohv_means_SW_global, result[16]))
+    rhohv_means_WSW_global = np.vstack((rhohv_means_WSW_global, result[17]))
+    rhohv_means_WNW_global = np.vstack((rhohv_means_WNW_global, result[18]))
+    rhohv_means_NW_global = np.vstack((rhohv_means_NW_global, result[19]))
+
+    ZDR_means_NE_global = np.vstack((ZDR_means_NE_global, result[20]))
+    ZDR_means_SW_global = np.vstack((ZDR_means_SW_global, result[21]))
+    ZDR_means_WSW_global = np.vstack((ZDR_means_WSW_global, result[22]))
+    ZDR_means_WNW_global = np.vstack((ZDR_means_WNW_global, result[23]))
+    ZDR_means_NW_global = np.vstack((ZDR_means_NW_global, result[24]))
+
     #secondary = np.vstack((secondary,results.get()))  #original method for extracting only one return from the function
 
 #sort by NPOL date/time
@@ -1481,6 +1637,18 @@ secondary_SW = secondary_SW[secondary_SW[:,0].argsort()]
 secondary_WSW = secondary_WSW[secondary_WSW[:,0].argsort()]
 secondary_WNW = secondary_WNW[secondary_WNW[:,0].argsort()]
 secondary_NW = secondary_NW[secondary_NW[:,0].argsort()]
+
+rhohv_means_NE_global = rhohv_means_NE_global[rhohv_means_NE_global[:,0].argsort()]
+rhohv_means_SW_global = rhohv_means_SW_global[rhohv_means_SW_global[:,0].argsort()]
+rhohv_means_WSW_global = rhohv_means_WSW_global[rhohv_means_WSW_global[:,0].argsort()]
+rhohv_means_WNW_global = rhohv_means_WNW_global[rhohv_means_WNW_global[:,0].argsort()]
+rhohv_means_NW_global = rhohv_means_NW_global[rhohv_means_NW_global[:,0].argsort()]
+
+ZDR_means_NE_global = ZDR_means_NE_global[ZDR_means_NE_global[:,0].argsort()]
+ZDR_means_SW_global = ZDR_means_SW_global[ZDR_means_SW_global[:,0].argsort()]
+ZDR_means_WSW_global = ZDR_means_WSW_global[ZDR_means_WSW_global[:,0].argsort()]
+ZDR_means_WNW_global = ZDR_means_WNW_global[ZDR_means_WNW_global[:,0].argsort()]
+ZDR_means_NW_global = ZDR_means_NW_global[ZDR_means_NW_global[:,0].argsort()]
 
 """
 SAVING
@@ -1510,5 +1678,39 @@ if save_data:
     np.save(save_fn_vals_NW, secondary_vals_NW)
     pd.DataFrame(secondary_NW).to_csv(save_fn_data_csv_NW)
     pd.DataFrame(secondary_vals_NW).to_csv(save_fn_vals_csv_NW)
+
+if save_dBZ_rhohv_ZDR:
+    np.save(dBZ_means_fn_NE, dBZ_means_NE_global[1:dBZ_means_NE_global.shape[0],:])
+    pd.DataFrame(dBZ_means_NE_global).to_csv(dBZ_means_fn_csv_NE)
+    np.save(dBZ_means_fn_SW, dBZ_means_SW_global[1:dBZ_means_SW_global.shape[0],:])
+    pd.DataFrame(dBZ_means_SW_global).to_csv(dBZ_means_fn_csv_SW)
+    np.save(dBZ_means_fn_WSW, dBZ_means_WSW_global[1:dBZ_means_WSW_global.shape[0],:])
+    pd.DataFrame(dBZ_means_WSW_global).to_csv(dBZ_means_fn_csv_WSW)
+    np.save(dBZ_means_fn_WNW, dBZ_means_WNW_global[1:dBZ_means_WNW_global.shape[0],:])
+    pd.DataFrame(dBZ_means_WNW_global).to_csv(dBZ_means_fn_csv_WNW)
+    np.save(dBZ_means_fn_NW, dBZ_means_NW_global[1:dBZ_means_NW_global.shape[0],:])
+    pd.DataFrame(dBZ_means_NW_global).to_csv(dBZ_means_fn_csv_NW)
+
+    np.save(rhohv_means_fn_NE, rhohv_means_NE_global[1:rhohv_means_NE_global.shape[0],:])
+    pd.DataFrame(rhohv_means_NE_global).to_csv(rhohv_means_fn_csv_NE)
+    np.save(rhohv_means_fn_SW, rhohv_means_SW_global[1:rhohv_means_SW_global.shape[0],:])
+    pd.DataFrame(rhohv_means_SW_global).to_csv(rhohv_means_fn_csv_SW)
+    np.save(rhohv_means_fn_WSW, rhohv_means_WSW_global[1:rhohv_means_WSW_global.shape[0],:])
+    pd.DataFrame(rhohv_means_WSW_global).to_csv(rhohv_means_fn_csv_WSW)
+    np.save(rhohv_means_fn_WNW, rhohv_means_WNW_global[1:rhohv_means_WNW_global.shape[0],:])
+    pd.DataFrame(rhohv_means_WNW_global).to_csv(rhohv_means_fn_csv_WNW)
+    np.save(rhohv_means_fn_NW, rhohv_means_NW_global[1:rhohv_means_NW_global.shape[0],:])
+    pd.DataFrame(rhohv_means_NW_global).to_csv(rhohv_means_fn_csv_NW)
+
+    np.save(ZDR_means_fn_NE, ZDR_means_NE_global[1:ZDR_means_NE_global.shape[0],:])
+    pd.DataFrame(ZDR_means_NE_global).to_csv(ZDR_means_fn_csv_NE)
+    np.save(ZDR_means_fn_SW, ZDR_means_SW_global[1:ZDR_means_SW_global.shape[0],:])
+    pd.DataFrame(ZDR_means_SW_global).to_csv(ZDR_means_fn_csv_SW)
+    np.save(ZDR_means_fn_WSW, ZDR_means_WSW_global[1:ZDR_means_WSW_global.shape[0],:])
+    pd.DataFrame(ZDR_means_WSW_global).to_csv(ZDR_means_fn_csv_WSW)
+    np.save(ZDR_means_fn_WNW, ZDR_means_WNW_global[1:ZDR_means_WNW_global.shape[0],:])
+    pd.DataFrame(ZDR_means_WNW_global).to_csv(ZDR_means_fn_csv_WNW)
+    np.save(ZDR_means_fn_NW, ZDR_means_NW_global[1:ZDR_means_NW_global.shape[0],:])
+    pd.DataFrame(ZDR_means_NW_global).to_csv(ZDR_means_fn_csv_NW)
 
 print("Total time:", datetime.datetime.now() - startTime)
